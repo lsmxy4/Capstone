@@ -7,7 +7,9 @@ type KakaoMaps = {
   load: (callback: () => void) => void
   LatLng: new (latitude: number, longitude: number) => LatLng
   Map: new (container: HTMLElement, options: { center: LatLng; level: number }) => { setBounds: (bounds: object) => void }
-  Marker: new (options: { map: object; position: LatLng; title?: string }) => object
+  Marker: new (options: { map: object; position: LatLng; title?: string }) => { setMap: (map: object | null) => void }
+  InfoWindow: new (options: { content: HTMLElement }) => { open: (map: object, marker: object) => void; close: () => void }
+  event: { addListener: (target: object, event: string, listener: () => void) => void; removeListener: (target: object, event: string, listener: () => void) => void }
   Polyline: new (options: { map: object; path: LatLng[]; strokeWeight: number; strokeColor: string; strokeOpacity: number; strokeStyle: string }) => object
   LatLngBounds: new () => { extend: (point: LatLng) => void }
 }
@@ -40,25 +42,64 @@ export default function KakaoMap({ coordinates, places }: { coordinates: Coordin
   useEffect(() => {
     if (!key || !containerRef.current) return
     let cancelled = false
+    let dispose: (() => void) | undefined
     loadKakaoMap(key).then(maps => {
       if (cancelled || !containerRef.current) return
       const current = new maps.LatLng(coordinates.latitude, coordinates.longitude)
       const map = new maps.Map(containerRef.current, { center: current, level: 5 })
       const bounds = new maps.LatLngBounds()
       bounds.extend(current)
-      new maps.Marker({ map, position: current, title: '현재 위치' })
+      const currentMarker = new maps.Marker({ map, position: current, title: '현재 위치' })
+      const currentLabel = document.createElement('div')
+      currentLabel.textContent = '현재 위치'
+      currentLabel.style.cssText = 'padding:8px 12px;font-size:12px;font-weight:700;white-space:nowrap;'
+      const currentInfo = new maps.InfoWindow({ content: currentLabel })
+      const showCurrent = () => currentInfo.open(map, currentMarker)
+      const hideCurrent = () => currentInfo.close()
+      maps.event.addListener(currentMarker, 'mouseover', showCurrent)
+      maps.event.addListener(currentMarker, 'mouseout', hideCurrent)
+      const cleanups: (() => void)[] = []
       places.forEach(place => {
         if (place.latitude == null || place.longitude == null) return
         const position = new maps.LatLng(place.latitude, place.longitude)
         bounds.extend(position)
-        new maps.Marker({ map, position, title: place.name })
+        const marker = new maps.Marker({ map, position, title: place.name })
+        const content = document.createElement('div')
+        content.style.cssText = 'padding:8px 12px;min-width:140px;max-width:230px;font-size:12px;line-height:1.5;word-break:keep-all;'
+        const name = document.createElement('strong')
+        name.textContent = place.name
+        const details = document.createElement('div')
+        details.style.color = '#68758b'
+        const category = place.category.split(' > ').at(-1) || place.category
+        const distance = place.distance == null ? '' : place.distance >= 1000
+          ? ` · ${(place.distance / 1000).toFixed(1)}km` : ` · ${place.distance}m`
+        details.textContent = `${category}${distance}`
+        content.append(name, details)
+        const info = new maps.InfoWindow({ content })
+        const show = () => info.open(map, marker)
+        const hide = () => info.close()
+        maps.event.addListener(marker, 'mouseover', show)
+        maps.event.addListener(marker, 'mouseout', hide)
+        cleanups.push(() => {
+          maps.event.removeListener(marker, 'mouseover', show)
+          maps.event.removeListener(marker, 'mouseout', hide)
+          info.close()
+          marker.setMap(null)
+        })
       })
       if (places.some(place => place.latitude != null && place.longitude != null)) map.setBounds(bounds)
+      dispose = () => {
+        cleanups.forEach(cleanup => cleanup())
+        maps.event.removeListener(currentMarker, 'mouseover', showCurrent)
+        maps.event.removeListener(currentMarker, 'mouseout', hideCurrent)
+        currentInfo.close()
+        currentMarker.setMap(null)
+      }
       setError(null)
     }).catch(reason => {
       if (!cancelled) setError(reason instanceof Error ? reason.message : '지도를 불러오지 못했습니다.')
     })
-    return () => { cancelled = true }
+    return () => { cancelled = true; dispose?.() }
   }, [coordinates, key, places])
 
   if (!key) return <div className="map-message"><b>카카오 지도 키가 필요합니다.</b><span><code>VITE_KAKAO_JAVASCRIPT_KEY</code>를 설정해 주세요.</span></div>
