@@ -26,9 +26,11 @@ type User = {
 };
 
 export default function App() {
+  // 현재 주소 확인
   const path =
     window.location.pathname.replace(/\/+$/, "") || "/";
 
+  // 처음 들어왔을 때 페이지 결정
   const initialPage: Page =
     path === "/login"
       ? "login"
@@ -62,15 +64,10 @@ export default function App() {
   const handleLoginSuccess = (
     loggedInUser: User
   ) => {
-    console.log(
-      "로그인 성공!",
-      loggedInUser
-    );
+    console.log("로그인 성공!", loggedInUser);
 
-    // 로그인 사용자 저장
     setUser(loggedInUser);
 
-    // Dashboard로 이동
     window.history.pushState(
       {},
       "",
@@ -84,27 +81,25 @@ export default function App() {
   const handleLogout = () => {
     console.log("로그아웃");
 
-    // 로그인 사용자 삭제
     setUser(null);
 
-    // "/" 주소로 이동
     window.history.pushState(
       {},
       "",
       "/"
     );
 
-    // Landing 화면으로 이동
     setPage("landing");
   };
 
+  // =========================
   // 로그인 화면
+  // =========================
+
   if (page === "login") {
     return (
       <Login
-        onLoginSuccess={
-          handleLoginSuccess
-        }
+        onLoginSuccess={handleLoginSuccess}
         onNavigateSignup={() => {
           navigate(
             "signup",
@@ -115,7 +110,10 @@ export default function App() {
     );
   }
 
+  // =========================
   // 회원가입 화면
+  // =========================
+
   if (page === "signup") {
     return (
       <Signup
@@ -129,12 +127,18 @@ export default function App() {
     );
   }
 
+  // =========================
   // 운동 정보
+  // =========================
+
   if (page === "exercise") {
     return <ExerciseInfo />;
   }
 
+  // =========================
   // Dashboard
+  // =========================
+
   if (page === "dashboard") {
     return (
       <Dashboard
@@ -144,16 +148,71 @@ export default function App() {
     );
   }
 
+  // =========================
   // 주변 장소
+  // =========================
+
   if (page === "places") {
     return <NearbyPlaces />;
   }
 
+  // =========================
   // 즐겨찾기
+  // =========================
+
   if (page === "favorites") {
     return <Favorites />;
   }
 
-  // 기본 화면
-  return <Landing />;
+  // =========================
+  // Landing
+  // =========================
+
+  return (
+    <Landing
+      onNavigateLogin={() => {
+        navigate(
+          "login",
+          "/login"
+        );
+      }}
+
+      onNavigateSignup={() => {
+        navigate(
+          "signup",
+          "/signup"
+        );
+      }}
+
+      onNavigatePage={(nextPage) => {
+        if (nextPage === "dashboard") {
+          navigate(
+            "dashboard",
+            "/dashboard"
+          );
+        }
+
+        if (nextPage === "exercise") {
+          navigate(
+            "exercise",
+            "/exercise"
+          );
+        }
+
+        if (nextPage === "places") {
+          navigate(
+            "places",
+            "/places"
+          );
+        }
+
+        if (nextPage === "favorites") {
+          navigate(
+            "favorites",
+            "/favorites"
+          );
+        }
+      }}
+    />
+  );
 }

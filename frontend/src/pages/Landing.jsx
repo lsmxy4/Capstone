@@ -1,285 +1,400 @@
-import './Landing.scss'
+import "./Landing.scss";
 
-const features = [
-  '실시간 위치 확인',
-  '날씨 & 대기질 분석',
-  '맞춤형 운동 정보',
-  '주변 운동 장소 탐색',
-  '즐겨찾기',
-  '운동 기록 관리'
-]
-
-const steps = [
-  {
-    title: '위치 권한 허용',
-    description: (
-      <>
-        브라우저의 위치 권한을
-        <br />
-        허용하면 자동으로 현재
-        <br />
-        위치를 감지합니다.
-      </>
-    )
-  },
-  {
-    title: '날씨 & 장소 분석',
-    description: (
-      <>
-        실시간 날씨·대기질과
-        <br />
-        주변 운동 장소를 자동으로
-        <br />
-        분석해 불러옵니다.
-      </>
-    )
-  },
-  {
-    title: '운동 시작!',
-    description: (
-      <>
-        맞춤 운동 정보를 바탕으로
-        <br />
-        최적의 장소에서
-        <br />
-        운동을 시작하세요.
-      </>
-    )
-  }
-]
-
-export default function Landing() {
+export default function Landing({
+  onNavigateLogin,
+  onNavigateSignup,
+  onNavigatePage,
+}) {
   return (
-    <div className="landing">
-
+    <div className="landing-page">
+      {/* HEADER */}
       <header className="landing-header">
+        <nav className="landing-nav">
+          <div className="landing-logo">
+            <div className="logo-icon">F</div>
+            <span>FitMap</span>
+          </div>
 
-        <a className="landing-logo" href="#intro">
-          FitMap
-        </a>
+          <div className="landing-menu">
+            <a href="#service">서비스 소개</a>
+            <a href="#features">주요 기능</a>
+          </div>
 
-        <nav aria-label="랜딩페이지 메뉴">
-          <a href="#intro">서비스 소개</a>
-          <a href="#features">주요 기능</a>
-          <a href="#how-it-works">이용 방법</a>
+          <div className="landing-auth">
+            <button
+              type="button"
+              className="login-button"
+              onClick={onNavigateLogin}
+            >
+              로그인
+            </button>
+
+            <button
+              type="button"
+              className="signup-button"
+              onClick={onNavigateSignup}
+            >
+              무료 시작하기
+            </button>
+          </div>
         </nav>
-
-        <a
-          className="placeholder-label"
-          href="/login"
-          style={{
-            textDecoration: 'none',
-            color: 'inherit'
-          }}
-        >
-          로그인 / 회원가입
-        </a>
-
       </header>
 
+      {/* MAIN */}
+      <main>
+        {/* HERO */}
+        <section className="landing-hero" id="service">
+          <div className="hero-inner">
+            <div className="hero-badge">
+              <span className="badge-dot"></span>
+              스마트 운동 가이드
+            </div>
 
-      <main className="landing-main">
-
-        {/* 메인 소개 */}
-        <section
-          className="landing-hero"
-          id="intro"
-          aria-labelledby="intro-title"
-        >
-          <div className="landing-container">
-
-            <p className="section-label">
-              01 · 메인 소개 구역
-            </p>
-
-            <h1 id="intro-title">
+            <h1>
               내 위치에서 시작하는
               <br />
-              스마트 운동가이드
+              <span>스마트 운동 가이드</span>
             </h1>
 
-            <p className="placeholder-copy">
-              현재 위치의 날씨·대기질을 실시간으로 분석하고
+            <p className="hero-description">
+              현재 위치의 날씨와 대기질을 분석하여
               <br />
-              주변 운동 장소와 맞춤형 운동 정보를 한 번에 제공합니다.
+              오늘 가장 적합한 운동과 주변 운동 장소를
+              추천해드립니다.
             </p>
 
-            <div
-              className="action-buttons-group"
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '12px',
-                marginBottom: '32px'
-              }}
-            >
-              <a
-                href="/dashboard"
-                className="placeholder-actions"
-              >
-                지금 내 위치에서 시작하기
-              </a>
-
-              <a
-                href="#features"
-                className="placeholder-actions"
-              >
-                서비스 둘러보기
-              </a>
-            </div>
-
-            <div className="wireframe preview-placeholder">
-              대시보드 미리보기 이미지 영역
-            </div>
-
-          </div>
-        </section>
-
-
-        {/* 주요 기능 */}
-        <section
-          className="landing-section"
-          id="features"
-          aria-labelledby="features-title"
-        >
-          <div className="landing-container">
-
-            <p className="section-label">
-              02 · 주요 기능 구역
-            </p>
-
-            <h2 id="features-title">
-              FitMap이 제공하는 모든 것
-            </h2>
-
-            <div className="landing-grid feature-grid">
-
-              {features.map((feature) => (
-                <article
-                  className="wireframe feature-placeholder"
-                  key={feature}
-                >
-                  <h3>{feature}</h3>
-                  <p>아이콘 / 기능 설명 영역</p>
-                </article>
-              ))}
-
-            </div>
-
-          </div>
-        </section>
-
-
-        {/* 이용 방법 */}
-        <section
-          className="landing-section tinted"
-          id="how-it-works"
-          aria-labelledby="steps-title"
-        >
-          <div className="landing-container">
-
-            <p className="section-label">
-              03 · 이용 방법 구역
-            </p>
-
-            <h2 id="steps-title">
-              3단계 이용 안내 영역
-            </h2>
-
-            <div className="landing-grid">
-
-              {steps.map((step, index) => (
-                <div
-                  className="step-placeholder"
-                  key={step.title}
-                >
-                  <span className="step-number">
-                    {index + 1}
-                  </span>
-
-                  <h3>{step.title}</h3>
-
-                  <p>{step.description}</p>
-                </div>
-              ))}
-
-            </div>
-
-          </div>
-        </section>
-
-
-        {/* 시작하기 */}
-        <section
-          className="landing-section cta-placeholder"
-          aria-labelledby="cta-title"
-        >
-          <div className="landing-container">
-
-            <p className="section-label">
-              04 · 시작하기 구역
-            </p>
-
-            <h2 id="cta-title">
-              지금 바로 시작해보세요
-            </h2>
-
-            <p className="placeholder-copy">
-              위치 권한 하나만 허용하면 나머지는 FitMap이 알아서 해드립니다.
-              <br />
-              오늘의 날씨와 최적의 운동 장소를 지금 확인해보세요.
-            </p>
-
-            <div
-              className="action-buttons-group"
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '12px'
-              }}
-            >
-              <a
-                href="/signup"
-                className="placeholder-actions"
+            <div className="hero-buttons">
+              <button
+                type="button"
+                className="hero-primary-button"
+                onClick={onNavigateSignup}
               >
                 무료로 시작하기
-              </a>
+              </button>
 
-              <a
-                href="/login"
-                className="placeholder-actions"
+              <button
+                type="button"
+                className="hero-secondary-button"
+                onClick={onNavigateLogin}
               >
                 로그인
-              </a>
+              </button>
             </div>
 
+            {/* DASHBOARD PREVIEW */}
+            <div className="dashboard-preview">
+              <div className="preview-top">
+                <div className="browser-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+
+                <div className="preview-address">
+                  fitmap.com
+                </div>
+
+                <div className="preview-icons">
+                  •••
+                </div>
+              </div>
+
+              <div className="preview-body">
+                <aside className="preview-sidebar">
+                  <div className="preview-logo">
+                    <span>F</span>
+                    FitMap
+                  </div>
+
+                  <div className="preview-menu active">
+                    <span>⌂</span>
+                    대시보드
+                  </div>
+
+                  <div className="preview-menu">
+                    <span>🏃</span>
+                    운동 정보
+                  </div>
+
+                  <div className="preview-menu">
+                    <span>⌖</span>
+                    주변 장소
+                  </div>
+
+                  <div className="preview-menu">
+                    <span>♡</span>
+                    즐겨찾기
+                  </div>
+                </aside>
+
+                <div className="preview-content">
+                  <div className="weather-card">
+                    <div>
+                      <span className="weather-location">
+                        현재 위치 · 양평
+                      </span>
+
+                      <div className="weather-temperature">
+                        24
+                        <span>°C</span>
+                      </div>
+
+                      <span className="weather-info">
+                        맑음 · 습도 58%
+                      </span>
+                    </div>
+
+                    <div className="weather-icon">
+                      ☀
+                    </div>
+                  </div>
+
+                  <div className="exercise-tabs">
+                    <div className="exercise-tab active">
+                      전체
+                    </div>
+
+                    <div className="exercise-tab">
+                      유산소
+                    </div>
+
+                    <div className="exercise-tab">
+                      근력
+                    </div>
+
+                    <div className="exercise-tab">
+                      스트레칭
+                    </div>
+                  </div>
+
+                  <div className="place-preview-list">
+                    <div className="preview-place">
+                      <div className="place-preview-icon">
+                        🏃
+                      </div>
+
+                      <div>
+                        <strong>양평 러닝파크</strong>
+                        <small>
+                          1.2 km · ★ 4.9
+                        </small>
+                      </div>
+
+                      <span>›</span>
+                    </div>
+
+                    <div className="preview-place">
+                      <div className="place-preview-icon">
+                        🏋
+                      </div>
+
+                      <div>
+                        <strong>핏니스 헬스장</strong>
+                        <small>
+                          1.8 km · ★ 4.8
+                        </small>
+                      </div>
+
+                      <span>›</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
+        {/* FEATURES */}
+        <section
+          className="features-section"
+          id="features"
+        >
+          <div className="section-inner">
+            <div className="section-title-area">
+              <span className="section-number">
+                핵심 기능
+              </span>
+
+              <h2>
+                FitMap이 제공하는 모든 것
+              </h2>
+
+              <p>
+                복잡한 설정 없이 위치만 허용하면
+                <br />
+                나머지는 FitMap이 알아서 분석합니다.
+              </p>
+            </div>
+
+            <div className="feature-grid">
+
+              {/* 1. 실시간 위치 확인 */}
+              <article
+                className="feature-card"
+                onClick={() =>
+                  onNavigatePage("dashboard")
+                }
+              >
+                <div className="feature-icon location">
+                  <span>⌖</span>
+                </div>
+
+                <h3>
+                  실시간 위치 확인
+                </h3>
+
+                <p>
+                  현재 위치를 확인하고 위치를 기반으로
+                  현재 날씨와 운동환경 정보를 제공합니다.
+                </p>
+
+                <button
+                  type="button"
+                  className="feature-link"
+                >
+                  자세히 보기 →
+                </button>
+              </article>
+
+              {/* 2. 맞춤형 운동 정보 */}
+              <article
+                className="feature-card"
+                onClick={() =>
+                  onNavigatePage("exercise")
+                }
+              >
+                <div className="feature-icon exercise">
+                  <span>♧</span>
+                </div>
+
+                <h3>
+                  맞춤형 운동 정보
+                </h3>
+
+                <p>
+                  현재 날씨와 운동환경을 분석해
+                  적합한 운동 정보를 제공합니다.
+                </p>
+
+                <button
+                  type="button"
+                  className="feature-link"
+                >
+                  자세히 보기 →
+                </button>
+              </article>
+
+              {/* 3. 주변 운동 장소 탐색 */}
+              <article
+                className="feature-card"
+                onClick={() =>
+                  onNavigatePage("places")
+                }
+              >
+                <div className="feature-icon place">
+                  <span>⌗</span>
+                </div>
+
+                <h3>
+                  주변 운동 장소 탐색
+                </h3>
+
+                <p>
+                  현재 위치 주변의 공원·운동장·체육시설을
+                  확인할 수 있습니다.
+                </p>
+
+                <button
+                  type="button"
+                  className="feature-link"
+                >
+                  자세히 보기 →
+                </button>
+              </article>
+
+              {/* 4. 즐겨찾기 */}
+              <article
+                className="feature-card"
+                onClick={() =>
+                  onNavigatePage("favorites")
+                }
+              >
+                <div className="feature-icon favorite">
+                  <span>♡</span>
+                </div>
+
+                <h3>
+                  즐겨찾기
+                </h3>
+
+                <p>
+                  자주 방문하는 운동 장소를 저장하고
+                  빠르게 확인할 수 있습니다.
+                </p>
+
+                <button
+                  type="button"
+                  className="feature-link"
+                >
+                  자세히 보기 →
+                </button>
+              </article>
+
+              {/* 5. 날씨 & 대기질 분석 */}
+              <article
+                className="feature-card"
+                onClick={() =>
+                  onNavigatePage("dashboard")
+                }
+              >
+                <div className="feature-icon weather">
+                  <span>☀</span>
+                </div>
+
+                <h3>
+                  날씨 & 대기질 분석
+                </h3>
+
+                <p>
+                  현재 위치의 날씨와 대기환경을 확인하고
+                  운동하기 좋은 환경인지 분석합니다.
+                </p>
+
+                <button
+                  type="button"
+                  className="feature-link"
+                >
+                  자세히 보기 →
+                </button>
+              </article>
+
+            </div>
+          </div>
+        </section>
       </main>
 
-
+      {/* FOOTER */}
       <footer className="landing-footer">
+        <div className="footer-inner">
+          <div className="footer-logo">
+            <div className="logo-icon">
+              F
+            </div>
 
-        <div className="landing-container footer-layout">
-
-          <div>
-            <strong>FitMap</strong>
-            <p>05 · 푸터 구역</p>
+            <span>
+              FitMap
+            </span>
           </div>
 
-          <div>
-            서비스 소개 / 지원 / 약관 링크 영역
-          </div>
+          <p>
+            내 위치에서 시작하는 스마트 운동 가이드
+          </p>
 
-          <div className="footer-bottom">
-            저작권 / 사용 API 표기 영역
-          </div>
-
+          <span className="footer-copy">
+            © 2026 FitMap. All rights reserved.
+          </span>
         </div>
-
       </footer>
-
     </div>
-  )
+  );
 }
