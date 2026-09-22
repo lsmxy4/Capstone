@@ -235,7 +235,7 @@
   }
 
   .category-tabs {
-    height: 52px;
+    min-height: 52px;
     background: #fff;
     border: 1px solid #e9ebf0;
     border-radius: 10px;
@@ -243,6 +243,7 @@
     display: flex;
     align-items: center;
     gap: 5px;
+    flex-wrap: wrap;
     margin-bottom: 20px;
 
     .category {
@@ -285,11 +286,7 @@
 
       .place-image {
         height: 135px;
-        background: linear-gradient(
-          135deg,
-          #eeeaff,
-          #e1e6ff
-        );
+        background: linear-gradient(135deg, #eeeaff, #e1e6ff);
         position: relative;
         display: flex;
         justify-content: center;
@@ -297,10 +294,12 @@
 
         .place-icon {
           font-size: 48px;
+          line-height: 1;
         }
 
         .favorite-star {
           position: absolute;
+          z-index: 1;
           right: 12px;
           top: 12px;
           width: 34px;
@@ -378,7 +377,7 @@
           gap: 7px;
           margin-top: 13px;
 
-          button {
+          a {
             height: 32px;
             border-radius: 6px;
             border: 1px solid #e0e3ea;
@@ -386,6 +385,10 @@
             color: #5f6879;
             font-size: 11px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
 
             &:last-child {
               background: #6658e8;
@@ -450,8 +453,10 @@
 }
 
 .favorites-page .favorites-main {
-  margin-left: 224px;
+  margin: 0 0 0 224px;
   width: calc(100% - 224px);
+  max-width: none;
+  padding: 0;
   background: #f1f4ff;
 }
 
@@ -489,7 +494,7 @@
   }
 
   .favorites-page .favorites-main {
-    margin-left: 0;
+    margin: 0;
     width: 100%;
   }
 
@@ -601,4 +606,13 @@
   .favorites-page .favorite-card {
     width: 100%;
   }
+}
+
+.favorites-message {
+  margin: 18px 0;
+  padding: 20px;
+  border-radius: 10px;
+  background: #fff;
+  color: #596273;
+  font-size: 13px;
 }

@@ -67,43 +67,13 @@ function uvGrade(value: number) {
   return '낮음'
 }
 
-function kstUvBaseTime(now = new Date()) {
-  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
-  const year = kst.getUTCFullYear()
-  const month = String(kst.getUTCMonth() + 1).padStart(2, '0')
-  const day = String(kst.getUTCDate()).padStart(2, '0')
-  return `${year}${month}${day}00`
-}
-
-async function uvIndex(config: Config, lat: number, lon: number) {
-  if (!config.KAKAO_REST_API_KEY) throw new ApiError(503, '카카오 REST API 키가 아직 설정되지 않았습니다.')
-  if (!config.KMA_SERVICE_KEY) throw new ApiError(503, '기상청 API 인증키가 아직 설정되지 않았습니다.')
-  const regionUrl = new URL('https://dapi.kakao.com/v2/local/geo/coord2regioncode.json')
-  regionUrl.search = new URLSearchParams({ x: String(lon), y: String(lat) }).toString()
-  const regionData = await upstream<{ documents?: { region_type?: string; code?: string; address_name?: string }[] }>(regionUrl, { Authorization: `KakaoAK ${config.KAKAO_REST_API_KEY}` })
-  const region = regionData.documents?.find(item => item.region_type === 'H') ?? regionData.documents?.[0]
-  if (!region?.code) throw new ApiError(502, '자외선 조회에 필요한 행정구역 코드를 찾지 못했습니다.')
-
-  const time = kstUvBaseTime()
-  const areaCandidates = [region.code, `${region.code.slice(0, 5)}00000`, `${region.code.slice(0, 2)}00000000`]
-  try {
-    const url = new URL('https://apis.data.go.kr/1360000/LivingWthrIdxServiceV4/getUVIdxV4')
-    url.search = new URLSearchParams({ serviceKey: decodedServiceKey(config.KMA_SERVICE_KEY), pageNo: '1', numOfRows: '10000', dataType: 'JSON', areaNo: '', time }).toString()
-    const data = await upstream<{ response?: { header?: { resultCode?: string }; body?: { items?: { item?: Record<string, string>[] } } } }>(url)
-    if (data.response?.header?.resultCode !== '00') throw new ApiError(502, '기상청 자외선지수를 조회하지 못했습니다.')
-    const items = data.response.body?.items?.item ?? []
-    const item = areaCandidates.map(areaNo => items.find(candidate => candidate.areaNo === areaNo)).find(Boolean)
-    const value = Number(item?.h0)
-    if (!Number.isFinite(value)) throw new ApiError(502, '기상청에서 현재 자외선지수를 제공하지 않습니다.')
-    return { value, grade: uvGrade(value), area: region.address_name ?? null, forecastAt: time, source: '기상청' }
-  } catch {
-    const fallbackUrl = new URL('https://air-quality-api.open-meteo.com/v1/air-quality')
-    fallbackUrl.search = new URLSearchParams({ latitude: String(lat), longitude: String(lon), current: 'uv_index', timezone: 'Asia/Seoul' }).toString()
-    const fallback = await upstream<{ current?: { time?: string; uv_index?: number } }>(fallbackUrl)
-    const value = Number(fallback.current?.uv_index)
-    if (!Number.isFinite(value)) throw new ApiError(502, '현재 자외선지수를 제공하지 않습니다.')
-    return { value, grade: uvGrade(value), area: region.address_name ?? null, forecastAt: fallback.current?.time ?? time, source: 'Open-Meteo' }
-  }
+async function uvIndex(lat: number, lon: number) {
+  const url = new URL('https://air-quality-api.open-meteo.com/v1/air-quality')
+  url.search = new URLSearchParams({ latitude: String(lat), longitude: String(lon), current: 'uv_index', timezone: 'Asia/Seoul' }).toString()
+  const data = await upstream<{ current?: { time?: string; uv_index?: number | null } }>(url)
+  const value = data.current?.uv_index
+  if (value == null || !Number.isFinite(value)) throw new ApiError(502, '현재 자외선지수를 제공하지 않습니다.')
+  return { value, grade: uvGrade(value), area: null, forecastAt: data.current?.time ?? null, source: 'Open-Meteo' }
 }
 
 async function airQuality(config: Config, lat: number, lon: number) {
@@ -219,7 +189,7 @@ export function createApiHandler(config: Config) {
           result = value
         }
       } else if (route === 'uv') {
-        result = await uvIndex(config, lat, lon)
+        result = await uvIndex(lat, lon)
       } else {
         if (!config.KAKAO_REST_API_KEY) throw new ApiError(503, '카카오 REST API 키가 아직 설정되지 않았습니다.')
         const url = new URL(route === 'region' ? 'https://dapi.kakao.com/v2/local/geo/coord2regioncode.json' : 'https://dapi.kakao.com/v2/local/search/keyword.json')

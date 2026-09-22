@@ -39,7 +39,6 @@ test('invalid coordinates and missing keys fail clearly without upstream calls',
   assert.equal((await call('/api/fitmap/weather?lat=37.5&lon=127')).status, 503)
   assert.equal((await call('/api/fitmap/places?lat=37.5&lon=127')).status, 503)
   assert.equal((await call('/api/fitmap/air-quality?lat=37.5&lon=127')).status, 503)
-  assert.equal((await call('/api/fitmap/uv?lat=37.5&lon=127')).status, 503)
   assert.equal((await call('/api/fitmap/unknown?lat=37.5&lon=127')).status, 404)
 })
 
@@ -83,20 +82,20 @@ test('temporary AirKorea failure uses clearly labelled model dust values', async
   } finally { globalThis.fetch = original }
 })
 
-test('UV flow resolves the administrative area and normalizes the index', async () => {
+test('UV flow uses current model data without the rejected KMA request', async () => {
   const original = globalThis.fetch
   globalThis.fetch = (async input => {
     const url = new URL(String(input))
-    if (url.hostname === 'dapi.kakao.com') return new Response(JSON.stringify({ documents: [{ region_type: 'H', code: '4136057000', address_name: '경기도 남양주시 별내동' }] }))
-    assert.equal(url.pathname.endsWith('/LivingWthrIdxServiceV4/getUVIdxV4'), true)
-    assert.equal(url.searchParams.get('areaNo'), '')
-    return new Response(JSON.stringify({ response: { header: { resultCode: '00' }, body: { items: { item: [{ areaNo: '4136000000', h0: '7' }] } } } }))
+    assert.equal(url.hostname, 'air-quality-api.open-meteo.com')
+    assert.equal(url.searchParams.get('current'), 'uv_index')
+    return new Response(JSON.stringify({ current: { time: '2026-09-22T11:00', uv_index: 7 } }))
   }) as typeof fetch
   try {
-    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12', { KAKAO_REST_API_KEY: 'kakao-test', KMA_SERVICE_KEY: 'kma-test' })
+    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12')
     assert.equal(result.status, 200)
     assert.equal(result.data.value, 7)
     assert.equal(result.data.grade, '높음')
+    assert.equal(result.data.source, 'Open-Meteo')
   } finally { globalThis.fetch = original }
 })
 

@@ -26,7 +26,6 @@ const exercises: { name: string; icon: IconName }[] = [
 ]
 
 export default function Dashboard({
-  user,
   onLogout,
 }: DashboardProps) {
 

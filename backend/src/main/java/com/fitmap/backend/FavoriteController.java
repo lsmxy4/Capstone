@@ -56,7 +56,8 @@ public class FavoriteController {
                 latitude, longitude, url, created_at) KEY (user_id, place_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, userId, placeId, place.name().trim(), place.category().trim(), place.address().trim(),
-            place.distance(), place.latitude(), place.longitude(), place.url(), Instant.now());
+            place.distance(), place.latitude(), place.longitude(),
+            place.url() == null ? null : place.url().replaceFirst("^http:", "https:"), Instant.now());
         return Map.of("favorite", place);
     }
 
@@ -74,7 +75,7 @@ public class FavoriteController {
             (place.distance() != null && (!Double.isFinite(place.distance()) || place.distance() < 0)) ||
             (place.latitude() != null && (!Double.isFinite(place.latitude()) || place.latitude() < -90 || place.latitude() > 90)) ||
             (place.longitude() != null && (!Double.isFinite(place.longitude()) || place.longitude() < -180 || place.longitude() > 180)) ||
-            (place.url() != null && (place.url().length() > 500 || !place.url().matches("https://place\\.map\\.kakao\\.com/[^\\s]+")))) {
+            (place.url() != null && (place.url().length() > 500 || !place.url().matches("https?://place\\.map\\.kakao\\.com/[^\\s]+")))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "올바른 장소 정보를 보내주세요.");
         }
     }

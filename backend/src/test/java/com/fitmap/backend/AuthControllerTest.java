@@ -104,7 +104,7 @@ class AuthControllerTest {
         Cookie cookie = new Cookie("fitmap_session", header.split("[=;]")[1]);
         String place = """
             {"id":"12345","name":"운동장","category":"스포츠","address":"서울시","distance":100,
-             "latitude":37.5,"longitude":127.0,"url":"https://place.map.kakao.com/12345"}
+             "latitude":37.5,"longitude":127.0,"url":"http://place.map.kakao.com/12345"}
             """;
         mvc.perform(get("/api/auth/favorites")).andExpect(status().isUnauthorized());
         mvc.perform(put("/api/auth/favorites/12345").contentType(MediaType.APPLICATION_JSON).content(place))
@@ -113,7 +113,8 @@ class AuthControllerTest {
             .contentType(MediaType.APPLICATION_JSON).content(place)).andExpect(status().isOk());
         mvc.perform(get("/api/auth/favorites").cookie(cookie)).andExpect(status().isOk())
             .andExpect(jsonPath("$.favorites.length()").value(1))
-            .andExpect(jsonPath("$.favorites[0].id").value("12345"));
+            .andExpect(jsonPath("$.favorites[0].id").value("12345"))
+            .andExpect(jsonPath("$.favorites[0].url").value("https://place.map.kakao.com/12345"));
         String anotherEmail = "favorite-" + UUID.randomUUID() + "@example.com";
         mvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON)
             .content(signup.replace(email, anotherEmail))).andExpect(status().isCreated());
