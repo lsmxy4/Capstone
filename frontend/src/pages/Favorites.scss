@@ -1,41 +1,44 @@
-＊{
-box-sizing: border-box;
+* {
+  box-sizing: border-box;
 }
 
 .favorites-page {
-min-height: 100vh;
-display: flex;
-background: #f5f6fb;
-color: #1f2937;
-font-family: Arial, "Noto Sans KR", sans-serif;
+  min-height: 100vh;
+  display: flex;
+  background: #f5f6fb;
+  color: #1f2937;
+  font-family: Arial, "Noto Sans KR", sans-serif;
+}
 
 .favorites-sidebar {
-width: 235px;
-min-height: 100vh;
-background: #20283b;
-color: #fff;
-display: flex;
-flex-direction: column;
-padding: 24px 16px;
-.favorites-logo {
-  height: 48px;
+  width: 235px;
+  min-height: 100vh;
+  background: #20283b;
+  color: #fff;
   display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  font-size: 21px;
-  font-weight: 800;
-  margin-bottom: 35px;
+  flex-direction: column;
+  padding: 24px 16px;
 
-  span {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: #6658e8;
+  .favorites-logo {
+    height: 48px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    font-size: 19px;
+    gap: 9px;
+    padding: 0 12px;
+    font-size: 21px;
+    font-weight: 800;
+    margin-bottom: 35px;
+
+    span {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #6658e8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 19px;
+    }
   }
 }
 
@@ -122,45 +125,46 @@ padding: 24px 16px;
     color: #8992a8;
   }
 }
-}
 
 .favorites-main {
-flex: 1;
-min-width: 0;
-.favorites-header {
-  height: 76px;
-  background: #fff;
-  border-bottom: 1px solid #e8eaf0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 38px;
+  flex: 1;
+  min-width: 0;
 
-  h1 {
-    margin: 0 0 5px;
-    font-size: 20px;
-  }
-
-  p {
-    margin: 0;
-    color: #8b93a5;
-    font-size: 12px;
-  }
-
-  .header-user {
+  .favorites-header {
+    height: 76px;
+    background: #fff;
+    border-bottom: 1px solid #e8eaf0;
     display: flex;
     align-items: center;
-    gap: 16px;
-    color: #697386;
-    font-size: 12px;
+    justify-content: space-between;
+    padding: 0 38px;
 
-    button {
-      width: 34px;
-      height: 34px;
-      border: 1px solid #e5e7ed;
-      background: #fff;
-      border-radius: 8px;
-      cursor: pointer;
+    h1 {
+      margin: 0 0 5px;
+      font-size: 20px;
+    }
+
+    p {
+      margin: 0;
+      color: #8b93a5;
+      font-size: 12px;
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: #697386;
+      font-size: 12px;
+
+      button {
+        width: 34px;
+        height: 34px;
+        border: 1px solid #e5e7ed;
+        background: #fff;
+        border-radius: 8px;
+        cursor: pointer;
+      }
     }
   }
 }
@@ -269,7 +273,10 @@ min-width: 0;
       border: 1px solid #e8eaf0;
       border-radius: 12px;
       overflow: hidden;
-      transition: 0.2s;
+
+      /* 카드 등장 애니메이션 */
+      opacity: 0;
+      animation: favoriteCardShow 0.6s ease forwards;
 
       &:hover {
         transform: translateY(-2px);
@@ -389,55 +396,57 @@ min-width: 0;
         }
       }
     }
+
+    /* 0.25초 간격으로 순서대로 등장 */
+   .favorite-card:nth-child(1) {
+  animation-delay: 0.25s;
+}
+
+.favorite-card:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.favorite-card:nth-child(3) {
+  animation-delay: 0.75s;
+}
+
+.favorite-card:nth-child(4) {
+  animation-delay: 1s;
+}
+
+.favorite-card:nth-child(5) {
+  animation-delay: 1.25s;
+}
+
+.favorite-card:nth-child(6) {
+  animation-delay: 1.5s;
+}
   }
 }
-}
+
+/* 카드 등장 애니메이션 */
+@keyframes favoriteCardShow {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@media (max-width: 1100px) {
-.favorites-page {
-.favorite-grid {
-grid-template-columns: repeat(2, minmax(0, 1fr));
+/* 기존 공통 Dashboard Sidebar 사용 */
+.legacy-favorites-sidebar {
+  display: none !important;
 }
-}
-}
-
-@media (max-width: 800px) {
-.favorites-page {
-.favorites-sidebar {
-width: 190px;
-}
-.favorites-header,
-.favorites-content {
-  padding-left: 20px;
-  padding-right: 20px;
-}
-
-.favorites-top {
-  align-items: flex-start !important;
-  flex-direction: column;
-  gap: 15px;
-}
-}
-}
-
-@media (max-width: 650px) {
-.favorites-page {
-.favorites-sidebar {
-display: none;
-}
-.favorite-grid {
-  grid-template-columns: 1fr;
-}
-}
-}
-.legacy-favorites-sidebar { display: none !important; }
 
 /* 공통 Dashboard Sidebar에 맞춘 본문 레이아웃 */
 .favorites-page {
   background: #f1f4ff;
   color: #202942;
-  font-family: Inter, 'Pretendard', 'Malgun Gothic', sans-serif;
+  font-family: Inter, "Pretendard", "Malgun Gothic", sans-serif;
 }
 
 .favorites-page .favorites-main {
@@ -464,15 +473,71 @@ display: none;
   border-radius: 14px;
 }
 
+/* 태블릿 */
+@media (max-width: 1100px) {
+  .favorites-page {
+    .favorite-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
 @media (max-width: 1000px) {
-  .favorites-page { display: block; min-height: 100vh; }
-  .favorites-page .favorites-main { margin-left: 0; width: 100%; }
-  .favorites-page .favorites-header { padding: 20px 14px; }
-  .favorites-page .favorites-content { padding: 0 14px 24px; }
+  .favorites-page {
+    display: block;
+    min-height: 100vh;
+  }
+
+  .favorites-page .favorites-main {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .favorites-page .favorites-header {
+    padding: 20px 14px;
+  }
+
+  .favorites-page .favorites-content {
+    padding: 0 14px 24px;
+  }
 }
 
 @media (min-width: 601px) and (max-width: 1000px) {
-  .favorites-page .favorites-header { min-height: 86px; }
+  .favorites-page .favorites-header {
+    min-height: 86px;
+  }
+}
+
+@media (max-width: 800px) {
+  .favorites-page {
+    .favorites-sidebar {
+      width: 190px;
+    }
+
+    .favorites-header,
+    .favorites-content {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .favorites-top {
+      align-items: flex-start !important;
+      flex-direction: column;
+      gap: 15px;
+    }
+  }
+}
+
+@media (max-width: 650px) {
+  .favorites-page {
+    .favorites-sidebar {
+      display: none;
+    }
+
+    .favorite-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 }
 
 @media (max-width: 600px) {
@@ -480,23 +545,60 @@ display: none;
     min-height: 78px;
     padding: 16px 14px;
   }
-  .favorites-page .favorites-header h1 { font-size: 22px; }
-  .favorites-page .favorites-header .header-user { display: none; }
-  .favorites-page .favorites-content { padding: 0 14px 20px; }
-  .favorites-page .favorites-top { margin-bottom: 16px; gap: 10px; }
-  .favorites-page .favorite-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
-  .favorites-page .favorite-card .place-image { height: 116px; }
-  .favorites-page .favorite-card .place-info { padding: 14px; }
-  .favorites-page .favorite-card .place-title h3 { font-size: 16px; }
-  .favorites-page .favorite-card .favorite-actions { flex-wrap: wrap; gap: 8px; }
+
+  .favorites-page .favorites-header h1 {
+    font-size: 22px;
+  }
+
+  .favorites-page .favorites-header .header-user {
+    display: none;
+  }
+
+  .favorites-page .favorites-content {
+    padding: 0 14px 20px;
+  }
+
+  .favorites-page .favorites-top {
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+
+  .favorites-page .favorite-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .favorites-page .favorite-card .place-image {
+    height: 116px;
+  }
+
+  .favorites-page .favorite-card .place-info {
+    padding: 14px;
+  }
+
+  .favorites-page .favorite-card .place-title h3 {
+    font-size: 16px;
+  }
+
+  .favorites-page .favorite-card .favorite-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 
 /* 모바일 실제 뷰포트에서는 항상 카드 한 장씩 표시 */
 @media (max-width: 760px) {
-  .favorites-page .favorites-header .header-user { display: none !important; }
+  .favorites-page .favorites-header .header-user {
+    display: none !important;
+  }
+
   .favorites-page .favorite-grid {
     grid-template-columns: minmax(0, 1fr) !important;
     width: 100%;
   }
-  .favorites-page .favorite-card { width: 100%; }
+
+  .favorites-page .favorite-card {
+    width: 100%;
+  }
 }

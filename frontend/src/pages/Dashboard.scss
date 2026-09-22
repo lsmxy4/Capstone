@@ -786,3 +786,40 @@
   .dashboard .welcome { flex-wrap: wrap; }
   .dashboard .header-actions button:first-child { display: flex; }
 }
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-info strong {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.user-info span {
+  margin-top: 2px;
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.logout-button {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.logout-button:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
