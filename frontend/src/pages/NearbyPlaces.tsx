@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import nearbyPlacesStyles from './NearbyPlaces.scss?inline'
 import Sidebar from '../components/layout/Sidebar'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { getPlaces, getRegion } from '../api/kakao'
+import { getWeather } from '../api/weather'
 import type { Place } from '../types/place'
 import KakaoMap from '../components/map/KakaoMap'
 
@@ -55,6 +56,8 @@ function placeType(place: Place): Exclude<Filter, '전체'> {
 export default function NearbyPlaces() {
   const location = useGeolocation()
   const [filter, setFilter] = useState<Filter>('전체')
+  const [weatherPending, setWeatherPending] = useState(false)
+  const filterTouched = useRef(false)
   const [places, setPlaces] = useState<Place[]>([])
   const [address, setAddress] = useState('현재 위치 확인 중')
   const [loading, setLoading] = useState(false)
@@ -82,7 +85,26 @@ export default function NearbyPlaces() {
     return () => controller.abort()
   }, [location.coordinates])
 
+  useEffect(() => {
+    if (!location.coordinates) return
+    const controller = new AbortController()
+    filterTouched.current = false
+    setFilter('전체')
+    setWeatherPending(true)
+    getWeather(location.coordinates, controller.signal).then(weather => {
+      if (!controller.signal.aborted && !filterTouched.current) {
+        setFilter(/비|소나기|빗방울|강수/.test(weather.condition) ? '실내' : '전체')
+      }
+    }).catch(() => {
+      if (!controller.signal.aborted && !filterTouched.current) setFilter('전체')
+    }).finally(() => {
+      if (!controller.signal.aborted) setWeatherPending(false)
+    })
+    return () => controller.abort()
+  }, [location.coordinates])
+
   const filteredPlaces = filter === '전체' ? places : places.filter(place => placeType(place) === filter)
+  const displayedPlaces = weatherPending && !filterTouched.current ? [] : filteredPlaces
 
   const toggleFavorite = (name: string) => {
     setFavorites((prev) => {
@@ -116,7 +138,7 @@ export default function NearbyPlaces() {
 
           <div className="places-layout">
             <section className="map-panel panel">
-              {location.coordinates ? <KakaoMap coordinates={location.coordinates} places={filteredPlaces} /> : <div className="map-placeholder"><span className="map-placeholder-icon"><Icon name="map" size={28} /></span><p>현재 위치 확인 중</p><small>위치 권한을 허용하면 주변 운동 장소 지도가 표시됩니다.</small></div>}
+              {location.coordinates ? <KakaoMap coordinates={location.coordinates} places={displayedPlaces} /> : <div className="map-placeholder"><span className="map-placeholder-icon"><Icon name="map" size={28} /></span><p>현재 위치 확인 중</p><small>위치 권한을 허용하면 주변 운동 장소 지도가 표시됩니다.</small></div>}
               <button type="button" className="locate-button" onClick={location.locate} disabled={location.loading}>
                 <Icon name="pin" size={14} /> 현재 위치로 이동
               </button>
@@ -132,7 +154,7 @@ export default function NearbyPlaces() {
                       type="button"
                       className={filter === item ? 'selected' : ''}
                       aria-pressed={filter === item}
-                      onClick={() => setFilter(item)}
+                      onClick={() => { filterTouched.current = true; setFilter(item) }}
                     >
                       {item}
                     </button>
@@ -145,9 +167,10 @@ export default function NearbyPlaces() {
               {location.error && <p className="empty-note" role="alert">{location.error}</p>}
               {error && <p className="empty-note" role="alert">{error}</p>}
               {loading && <p className="empty-note" role="status">주변 장소를 불러오는 중…</p>}
+              {weatherPending && !filterTouched.current && <p className="empty-note" role="status">현재 날씨를 확인해 장소 필터를 선택하는 중…</p>}
 
               <div className="place-grid">
-                {!loading && filteredPlaces.map((place) => {
+                {!loading && displayedPlaces.map((place) => {
                   const isFavorited = favorites.has(place.id)
                   const category = place.category.split(' > ').at(-1) ?? place.category
                   const type = placeType(place)
@@ -173,7 +196,7 @@ export default function NearbyPlaces() {
                   )
                 })}
 
-                {!loading && !error && filteredPlaces.length === 0 && (
+                {!loading && !weatherPending && !error && displayedPlaces.length === 0 && (
                   <p className="empty-note">주변에서 해당 운동 장소를 찾지 못했습니다.</p>
                 )}
               </div>

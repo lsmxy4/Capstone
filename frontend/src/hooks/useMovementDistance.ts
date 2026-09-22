@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
-type Point = { latitude: number; longitude: number }
+export type Point = { latitude: number; longitude: number }
+export type RecordedPoint = Point & { id: string; recordedAt: string }
 
 function distanceMeters(from: Point, to: Point) {
   const radius = 6371000
@@ -15,13 +16,20 @@ function distanceMeters(from: Point, to: Point) {
 export function useMovementDistance(enabled: boolean) {
   const [meters, setMeters] = useState(0)
   const [points, setPoints] = useState<Point[]>([])
+  const [latestPoint, setLatestPoint] = useState<RecordedPoint | null>(null)
+  const [accuracyMeters, setAccuracyMeters] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const previous = useRef<Point | null>(null)
 
   useEffect(() => {
-    if (!enabled || !navigator.geolocation) return
+    if (!enabled) return
+    if (!navigator.geolocation) {
+      setError('이 브라우저는 위치 추적을 지원하지 않습니다.')
+      return
+    }
     const watchId = navigator.geolocation.watchPosition(position => {
       const next = { latitude: position.coords.latitude, longitude: position.coords.longitude }
+      setAccuracyMeters(position.coords.accuracy)
       setError(null)
       if (position.coords.accuracy > 100) {
         setPoints(value => value.length ? value : [next])
@@ -30,6 +38,7 @@ export function useMovementDistance(enabled: boolean) {
       if (!previous.current) {
         previous.current = next
         setPoints([next])
+        setLatestPoint({ ...next, id: crypto.randomUUID(), recordedAt: new Date(position.timestamp).toISOString() })
         return
       }
       if (previous.current) {
@@ -38,6 +47,7 @@ export function useMovementDistance(enabled: boolean) {
         if (segment >= minimumMovement && segment < 1000) {
           setMeters(value => value + segment)
           setPoints(value => [...value.slice(-999), next])
+          setLatestPoint({ ...next, id: crypto.randomUUID(), recordedAt: new Date(position.timestamp).toISOString() })
         }
       }
       previous.current = next
@@ -47,5 +57,5 @@ export function useMovementDistance(enabled: boolean) {
     return () => navigator.geolocation.clearWatch(watchId)
   }, [enabled])
 
-  return { meters, points, error }
+  return { meters, points, latestPoint, accuracyMeters, error }
 }

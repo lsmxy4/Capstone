@@ -65,7 +65,7 @@ export default function KakaoMap({ coordinates, places }: { coordinates: Coordin
   return <div className="kakao-map" ref={containerRef}>{error && <div className="map-message">{error}</div>}</div>
 }
 
-export function MovementRouteMap({ points }: { points: Coordinates[] }) {
+export function MovementRouteMap({ points, emptyMessage = '현재 위치를 확인하는 중입니다.' }: { points: Coordinates[]; emptyMessage?: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
   const key = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY as string | undefined
@@ -91,6 +91,6 @@ export function MovementRouteMap({ points }: { points: Coordinates[] }) {
   }, [key, points])
 
   if (!key) return <div className="route-map-message">카카오 JavaScript 지도 키를 설정하면 이동 경로가 표시됩니다.</div>
-  if (!points.length) return <div className="route-map-message">정확한 현재 위치를 확인하는 중입니다.</div>
+  if (!points.length) return <div className="route-map-message">{emptyMessage}</div>
   return <div className="movement-route-map" ref={containerRef}>{error && <div className="route-map-message">{error}</div>}</div>
 }
