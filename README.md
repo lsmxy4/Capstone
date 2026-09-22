@@ -1,443 +1,125 @@
 # FitMap
 
-> 사용자의 현재 위치와 기상·대기질 정보를 활용해 운동 환경을 안내하고, 주변 운동 장소를 확인할 수 있는 위치 기반 운동 웹 서비스입니다.
+FitMap은 현재 위치의 날씨와 대기질을 확인하고, 운동 정보를 살펴보며, 주변 운동 장소를 찾는 웹 서비스입니다. 로그인하면 장소 즐겨찾기와 날짜별 이동 경로를 저장할 수 있습니다.
 
-## 1. 프로젝트 개요
+## 주요 기능
 
-FitMap은 단순히 날씨를 조회하는 서비스가 아닙니다. 사용자의 현재 위치를 바탕으로 날씨와 대기질을 분석하고, 현재 환경에 적합한 실내·실외 운동 정보와 주변 운동 장소를 한곳에서 제공합니다.
-
-```text
-현재 위치
-   ↓
-날씨 + 대기질
-   ↓
-현재 운동 환경 분석
-   ↓
-실내 / 실외 운동 안내
-   ↓
-운동 정보 제공
-   ↓
-주변 운동 장소 확인
-```
-
-## 2. 문제 설정
-
-운동 전 사용자는 날씨, 미세먼지, 주변 운동 장소 등을 각각 다른 서비스에서 확인해야 하는 불편함이 있습니다.
-
-FitMap은 이 문제를 해결하기 위해 **현재 위치를 기준으로 날씨·대기질·운동 정보·주변 운동 장소를 하나의 웹사이트에서 제공합니다.**
-
-## 3. 주요 기능
-
-| 기능 | 내용 |
+| 화면 | 기능 |
 | --- | --- |
-| 현재 위치 | Geolocation API로 위도와 경도 확인 |
-| 현재 날씨 | 기온, 체감온도, 습도, 강수, 풍속 등 제공 |
-| 대기질 | 미세먼지, 초미세먼지, 오존 정보 제공 |
-| 운동 선택 | 러닝, 걷기, 자전거, 등산, 수영 지원 |
-| 운동 정보 | 운동 강도, 시간, 거리, 예상 칼로리 제공 |
-| 운동 환경 | 현재 날씨가 운동에 미치는 영향 안내 |
-| 실내·실외 안내 | 날씨에 따라 실내 또는 실외 운동 안내 |
-| 시간대별 정보 | 운동하기 좋은 시간대 확인 |
-| 주변 장소 | 공원, 체육관, 운동장 등을 지도에 표시 |
-| 즐겨찾기 | 자주 이용하는 운동 장소 저장 |
-| 운동 기록 | 운동 종류, 시간, 거리 등 저장 |
-| 로그인·회원가입 | 개인별 데이터 관리 |
+| 홈 `/dashboard` | 현재 위치, 날씨, 대기질, 자외선지수, 운동 추천과 주변 장소 요약 |
+| 운동 정보 `/exercise` | 운동별 가이드, 현재 환경에 따른 추천, 이동 거리와 지도 경로 |
+| 주변 장소 `/places` | 카카오 지도와 장소 검색, 실내·실외 필터, 즐겨찾기 추가·해제 |
+| 즐겨찾기 `/favorites` | 계정별 저장 장소 조회, 검색·분류·정렬, 즐겨찾기 해제 |
+| 로그인·회원가입 `/login`, `/signup` | Spring Boot 세션 인증 |
 
-## 4. 사용 API
+주변 장소 화면은 비가 오면 처음에 `실내` 필터를, 그 외에는 `전체` 필터를 선택합니다. 사용자가 필터를 직접 바꿀 수 있습니다. 즐겨찾기는 계정별로 저장되며, 이동 경로는 한국 시간 날짜를 기준으로 나뉩니다. 운동 정보 화면의 이동 거리 측정은 화면을 연 뒤 수집한 위치를 기준으로 합니다.
 
-FitMap은 다음 API를 활용합니다.
+## 기술 구성
 
-```text
-Geolocation API
-├─ 현재 위도
-└─ 현재 경도
+- **프런트엔드:** React, TypeScript, Vite, SCSS
+- **백엔드:** Java 21, Spring Boot, JDBC, H2
+- **지도·장소·주소:** Kakao Maps JavaScript SDK와 Kakao Local API
+- **날씨:** 기상청 단기예보 API
+- **대기질:** AirKorea API. 연결이 지연되면 Open-Meteo 추정치를 출처 표시와 함께 사용
+- **자외선지수:** Open-Meteo
+- **현재 위치:** 브라우저 Geolocation API
 
-기상청 API
-├─ 기온
-├─ 습도
-├─ 강수확률
-├─ 강수 여부
-└─ 풍속
+브라우저는 Vite 서버의 `/api/fitmap/*`에서 날씨·장소 정보를 받고, `/api/auth/*` 요청은 Spring Boot 서버로 전달됩니다. 외부 API 키는 Vite 서버에서 읽으며, `VITE_KAKAO_JAVASCRIPT_KEY`만 지도 SDK를 위해 브라우저에 제공됩니다.
 
-AirKorea API
-├─ PM10 미세먼지
-├─ PM2.5 초미세먼지
-└─ 오존
+## 실행하기
 
-Kakao API
-├─ 지도
-├─ 현재 위치
-├─ 주변 운동 장소
-├─ 주소
-└─ 거리
+### Docker Compose
+
+1. `frontend/.env.example`을 `frontend/.env.local`로 복사합니다.
+2. `frontend/.env.local`에 실제 API 키를 입력합니다.
+3. 프로젝트 루트에서 실행합니다.
+
+```powershell
+docker compose up -d --build
 ```
 
-Kakao API 연동에는 **Kakao Map API**와 **Kakao Local API**를 함께 사용합니다.
+웹 화면은 [http://localhost:5173](http://localhost:5173), Spring Boot 서버는 `http://localhost:8080`에서 열립니다. `8080`의 `/`로 접속하면 웹 화면으로 이동합니다. 로그는 `docker compose logs -f`로 확인하고, 종료는 `docker compose down`을 사용합니다. 로그인·즐겨찾기·경로 데이터는 Docker의 `auth-data` 볼륨에 보존됩니다.
 
-## 5. 전체 시스템 구성도
+### 직접 실행하기
 
-```text
-                    ┌───────────────┐
-                    │     사용자     │
-                    └───────┬───────┘
-                            │
-                            ▼
-                  ┌─────────────────┐
-                  │ React 웹사이트   │
-                  │ TypeScript 기반 │
-                  └────────┬────────┘
-                           │
-                    Geolocation API
-                           │
-                           ▼
-                    위도 / 경도
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-     기상청 API       AirKorea API      Kakao API
-          │                │                │
-          ▼                ▼                ▼
-       날씨 정보         대기질 정보       주변 장소
-          │                │                │
-          └────────────────┼────────────────┘
-                           ▼
-                  ┌──────────────────┐
-                  │ 운동 정보 처리    │
-                  │                  │
-                  │ 실내/실외 판단    │
-                  │ 운동 강도         │
-                  │ 시간/거리 정보    │
-                  │ 주의사항          │
-                  └────────┬─────────┘
-                           ▼
-                       Dashboard
+Node.js 22, Java 21, Maven이 필요합니다. 터미널 두 개에서 각각 실행합니다.
+
+```powershell
+cd backend
+mvn spring-boot:run
 ```
 
-## 6. 페이지 구성
-
-```text
-Landing
-   ↓
-Login / Signup
-   ↓
-Dashboard
-   ├─ 운동 정보
-   ├─ 주변 장소
-   ├─ 즐겨찾기
-   ├─ 운동 기록
-   └─ 마이페이지
+```powershell
+cd frontend
+Copy-Item .env.example .env.local
+# .env.local에 API 키를 입력한 뒤 실행
+npm ci
+npm run dev
 ```
 
-### Landing
+직접 실행할 때 H2 파일은 기본적으로 `backend/data/fitmap.mv.db`에 저장됩니다. 브라우저 위치 권한을 허용해야 현재 위치를 사용하는 기능이 동작합니다.
 
-서비스 소개 페이지입니다.
+## API 키 설정
 
-```text
-FitMap 소개
-주요 기능 소개
-서비스 이용 방법
-로그인
-회원가입
-```
+`frontend/.env.example`에 필요한 변수와 설명이 있습니다.
 
-### Login
+| 변수 | 용도 |
+| --- | --- |
+| `KAKAO_REST_API_KEY` | 카카오 장소 검색·주소 조회 |
+| `VITE_KAKAO_JAVASCRIPT_KEY` | 브라우저 카카오 지도 |
+| `KMA_SERVICE_KEY` | 기상청 날씨 조회용 공공데이터포털 키 |
+| `AIRKOREA_SERVICE_KEY` | AirKorea 측정소·대기질 조회용 공공데이터포털 키 |
 
-```text
-이메일
-비밀번호
-로그인
-회원가입 이동
-```
+키를 바꾼 뒤에는 프런트엔드 서버를 재시작하세요. `.env.local`에는 실제 키가 들어가므로 저장소에 올리지 마세요. 기상청과 AirKorea 키는 공공데이터포털에서 해당 서비스의 활용 승인이 필요합니다.
 
-### Signup
+## 저장되는 데이터와 백엔드 API
 
-```text
-이름
-이메일
-비밀번호
-비밀번호 확인
-선호 운동 등
-```
+Spring Boot는 사용자, 로그인 세션, 즐겨찾기 장소, 이동 경로의 위치 점을 H2에 저장합니다. 세션은 `fitmap_session` HttpOnly 쿠키로 유지되며, 비밀번호는 BCrypt 해시로 저장합니다.
 
-### Dashboard
+| 메서드 | 경로 | 내용 |
+| --- | --- | --- |
+| `POST` | `/api/auth/signup` | 회원가입 |
+| `POST` | `/api/auth/login` | 로그인 |
+| `GET` | `/api/auth/me` | 현재 로그인 사용자 |
+| `POST` | `/api/auth/logout` | 로그아웃 |
+| `GET` | `/api/auth/favorites` | 내 즐겨찾기 목록 |
+| `PUT` | `/api/auth/favorites/{placeId}` | 장소 즐겨찾기 저장 |
+| `DELETE` | `/api/auth/favorites/{placeId}` | 장소 즐겨찾기 해제 |
+| `POST` | `/api/auth/routes` | 이동 경로 위치 점 저장 |
+| `GET` | `/api/auth/routes?date=YYYY-MM-DD` | 날짜별 이동 경로 |
+| `GET` | `/api/auth/routes/dates` | 경로가 저장된 날짜 목록 |
 
-서비스의 메인 화면입니다.
+즐겨찾기와 경로 API는 로그인이 필요합니다. `PUT /api/auth/favorites/{placeId}`에는 장소의 `id`, `name`, `category`, `address`, `distance`, `latitude`, `longitude`, `url`을 JSON으로 보냅니다. `POST /api/auth/routes`에는 위치 점의 UUID `id`, `latitude`, `longitude`, ISO 8601 형식의 `recordedAt`을 보냅니다. 자세한 응답 형식과 서버 설정은 [백엔드 README](backend/README.md)에 있습니다.
 
-```text
-현재 위치
-
-현재 날씨
-├─ 기온
-├─ 체감온도
-├─ 습도
-├─ 강수확률
-├─ 풍속
-└─ 자외선
-
-대기질
-├─ 미세먼지
-├─ 초미세먼지
-└─ 오존
-
-운동 종류 선택
-
-오늘의 운동 정보
-├─ 운동 강도
-├─ 운동 시간
-├─ 거리
-└─ 칼로리
-
-주변 운동 장소 일부
-```
-
-### ExerciseInfo
-
-```text
-운동 종류 선택
-
-오늘의 운동 정보
-├─ 운동 강도
-├─ 권장 시간
-├─ 권장 거리
-└─ 예상 칼로리
-
-현재 운동 환경
-├─ 기온
-├─ 습도
-├─ 풍속
-├─ 강수
-├─ 미세먼지
-└─ 자외선
-
-시간대별 운동 환경
-
-실내 / 실외 운동 안내
-
-운동 주의사항
-```
-
-### NearbyPlaces
-
-```text
-카카오맵
-
-현재 위치
-
-주변 운동 장소
-├─ 공원
-├─ 체육관
-├─ 체육센터
-├─ 운동장
-└─ 산책로
-
-필터
-├─ 전체
-├─ 실내
-└─ 실외
-
-장소 정보
-├─ 이름
-├─ 거리
-├─ 주소
-└─ 즐겨찾기
-```
-
-> 주변 운동 장소에는 추천 점수나 순위를 사용하지 않습니다.
-
-### Favorites
-
-```text
-즐겨찾기한 운동 장소
-├─ 장소명
-├─ 시설 종류
-├─ 거리
-├─ 지도에서 보기
-└─ 즐겨찾기 삭제
-```
-
-### ExerciseHistory
-
-```text
-날짜
-운동 종류
-운동 시간
-거리
-운동 강도
-운동 당시 날씨
-```
-
-### MyPage
-
-```text
-이름
-이메일
-선호 운동
-평균 운동시간
-평균 운동거리
-
-회원정보 수정
-로그아웃
-```
-
-## 7. 프로젝트 파일 구조
+## 프로젝트 구조
 
 ```text
 Capstone/
-│
-├─ public/
-│
-├─ src/
-│  │
-│  ├─ pages/
-│  │  ├─ Landing.jsx
-│  │  ├─ Login.jsx
-│  │  ├─ Signup.jsx
-│  │  ├─ Dashboard.tsx
-│  │  ├─ ExerciseInfo.tsx
-│  │  ├─ NearbyPlaces.tsx
-│  │  ├─ Favorites.tsx
-│  │  ├─ ExerciseHistory.tsx
-│  │  └─ MyPage.tsx
-│  │
-│  ├─ components/
-│  │  ├─ layout/
-│  │  │  ├─ Sidebar.tsx
-│  │  │  └─ Header.tsx
-│  │  ├─ weather/
-│  │  │  ├─ WeatherCard.tsx
-│  │  │  └─ AirQualityCard.tsx
-│  │  ├─ exercise/
-│  │  │  └─ ExerciseCard.tsx
-│  │  └─ map/
-│  │     └─ NearbyPlacesCard.tsx
-│  │
-│  ├─ api/
-│  │  ├─ weather.ts
-│  │  ├─ airQuality.ts
-│  │  └─ kakao.ts
-│  │
-│  ├─ hooks/
-│  │  └─ useGeolocation.ts
-│  │
-│  ├─ types/
-│  │  ├─ weather.ts
-│  │  ├─ airQuality.ts
-│  │  ├─ exercise.ts
-│  │  ├─ location.ts
-│  │  └─ place.ts
-│  │
-│  ├─ utils/
-│  │  ├─ weatherUtils.ts
-│  │  └─ exerciseUtils.ts
-│  │
-│  ├─ assets/
-│  ├─ App.tsx
-│  ├─ main.tsx
-│  └─ index.css
-│
-├─ .env
-├─ .gitignore
-├─ package.json
-├─ tsconfig.json
-├─ tsconfig.app.json
-└─ vite.config.ts
+├─ backend/
+│  ├─ src/main/java/com/fitmap/backend/  # 인증·즐겨찾기·경로 API
+│  ├─ src/main/resources/                # Spring 설정·DB 스키마
+│  └─ README.md
+├─ frontend/
+│  ├─ server/                            # Vite의 외부 API 중계
+│  ├─ src/api/                           # 화면에서 호출하는 API
+│  ├─ src/components/                    # 공통 UI·지도
+│  ├─ src/hooks/                         # 위치·경로·화면 데이터
+│  ├─ src/pages/                         # 화면
+│  ├─ .env.example
+│  └─ package.json
+├─ docker-compose.yml
+└─ README.md
 ```
 
-## 8. 폴더별 역할
+## 확인 명령
 
-| 폴더 | 역할 |
-| --- | --- |
-| `pages/` | 실제 페이지 화면 |
-| `components/` | 여러 화면에서 재사용하는 UI 컴포넌트 |
-| `api/` | 외부 API 호출 코드 |
-| `hooks/` | 현재 위치 조회 등 React 공통 기능 |
-| `types/` | TypeScript 데이터 타입 |
-| `utils/` | 데이터 계산 및 변환 로직 |
-| `assets/` | 이미지, 로고, 아이콘 등 정적 파일 |
-
-데이터는 다음과 같은 흐름으로 처리합니다.
-
-```text
-Dashboard.tsx
-        ↓
-useGeolocation.ts
-        ↓
-현재 위치
-        ↓
-┌──────────────┬────────────────┬──────────────┐
-weather.ts   airQuality.ts     kakao.ts
-    ↓             ↓                ↓
-날씨 데이터    대기질 데이터     장소 데이터
+```powershell
+cd frontend
+npm run build
+node --test server/api.test.ts
 ```
 
-## 9. TypeScript와 JavaScript 사용 기준
-
-프로젝트는 **React + TypeScript**를 기본으로 하되, 팀원이 JavaScript로 작성한 파일도 함께 사용할 수 있도록 구성합니다.
-
-```text
-프로젝트 기본
-└─ React + TypeScript
-
-TypeScript 담당
-├─ .ts
-└─ .tsx
-
-JavaScript 담당
-├─ .js
-└─ .jsx
+```powershell
+cd backend
+mvn test
 ```
-
-예시 역할 분담은 다음과 같습니다.
-
-```text
-Landing.jsx       ← JavaScript 담당
-Login.jsx         ← JavaScript 담당
-Signup.jsx        ← JavaScript 담당
-
-Dashboard.tsx     ← TypeScript 담당
-ExerciseInfo.tsx  ← TypeScript 담당
-weather.ts        ← TypeScript 담당
-kakao.ts          ← TypeScript 담당
-```
-
-JavaScript 파일을 함께 사용하기 위해 `tsconfig.app.json`은 아래 설정을 유지합니다.
-
-```json
-{
-  "allowJs": true,
-  "checkJs": false
-}
-```
-
-## 10. 개발 순서
-
-외부 API를 한 번에 모두 연결하지 않고 다음 순서로 단계적으로 구현합니다.
-
-```text
-1단계: 페이지 / 라우팅 구성
-   ↓
-2단계: Dashboard UI 구현
-   ↓
-3단계: Geolocation API로 현재 위치 확보
-   ↓
-4단계: 기상청 API로 날씨 표시
-   ↓
-5단계: AirKorea API로 대기질 표시
-   ↓
-6단계: 운동 정보 로직 및 실내 / 실외 판단
-   ↓
-7단계: Kakao Map으로 주변 운동 장소 표시
-   ↓
-8단계: 로그인 / 회원가입 연결
-   ↓
-9단계: 즐겨찾기 / 운동 기록 구현
-   ↓
-10단계: 전체 UI 개선 및 오류 처리
-```
-
-우선 구현 범위는 **Dashboard와 매인 페이지 → Geolocation → 기상청 → AirKorea → Kakao** 순서입니다.
-
-## 최종 구조
-
-> **Geolocation API로 사용자의 현재 위치를 확인하고, 기상청·AirKorea 데이터를 활용해 운동 환경을 제공하며, Kakao Map을 통해 주변 운동 장소를 확인할 수 있는 React 기반 위치 맞춤형 운동 웹 서비스입니다.**
