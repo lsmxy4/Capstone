@@ -63,6 +63,26 @@ test('AirKorea flow finds a nearby station and normalizes measurements', async (
   } finally { globalThis.fetch = original }
 })
 
+test('temporary AirKorea failure uses clearly labelled model dust values', async () => {
+  const original = globalThis.fetch
+  globalThis.fetch = (async input => {
+    const url = new URL(String(input))
+    if (url.hostname === 'dapi.kakao.com') return new Response(JSON.stringify({ documents: [{ x: 200000, y: 450000 }] }))
+    if (url.hostname === 'apis.data.go.kr') return new Response('', { status: 504 })
+    assert.equal(url.hostname, 'air-quality-api.open-meteo.com')
+    return new Response(JSON.stringify({ current: { time: '2026-09-22T10:00', pm10: 31, pm2_5: 36 } }))
+  }) as typeof fetch
+  try {
+    const result = await call('/api/fitmap/air-quality?lat=37.5&lon=127', { KAKAO_REST_API_KEY: 'test-only', AIRKOREA_SERVICE_KEY: 'test-only' })
+    assert.equal(result.status, 200)
+    assert.equal(result.data.source, 'Open-Meteo')
+    assert.equal(result.data.pm10.grade, '보통')
+    assert.equal(result.data.pm25.grade, '나쁨')
+    assert.equal(result.data.ozone.value, null)
+    assert.match(result.data.warning, /모델 추정치/)
+  } finally { globalThis.fetch = original }
+})
+
 test('UV flow resolves the administrative area and normalizes the index', async () => {
   const original = globalThis.fetch
   globalThis.fetch = (async input => {
@@ -86,6 +106,7 @@ test('Kakao requests attach server key, encode query and normalize results', asy
     const url = new URL(String(input))
     assert.equal(url.origin, 'https://dapi.kakao.com')
     assert.equal(url.searchParams.get('query'), '수영장')
+    assert.equal(url.searchParams.get('size'), '3')
     assert.equal((options?.headers as Record<string, string>).Authorization, 'KakaoAK test-only')
     return new Response(JSON.stringify({ documents: [{ id: '1', place_name: '테스트 수영장', category_name: '운동 > 수영장', address_name: '테스트 주소', distance: '1200', x: '127.1', y: '37.5', place_url: 'https://place.map.kakao.com/1' }] }))
   }) as typeof fetch

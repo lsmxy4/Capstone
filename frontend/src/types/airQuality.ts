@@ -4,6 +4,8 @@ export type AirMetric = {
 }
 
 export type AirQuality = {
+  source: 'AirKorea' | 'Open-Meteo'
+  warning: string | null
   stationName: string
   measuredAt: string | null
   overallGrade: string
