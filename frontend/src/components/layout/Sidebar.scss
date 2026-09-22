@@ -19,7 +19,6 @@
     font-size: 23px;
   }
 
-
   nav {
     padding: 16px 14px;
     display: grid;
@@ -33,7 +32,7 @@
       padding: 0 16px;
       border-radius: 8px;
       font-size: 16px;
-      transition: .18s ease;
+      transition: 0.18s ease;
     }
 
     a:hover {
@@ -52,43 +51,81 @@
     margin-top: auto;
     min-height: 67px;
     border-top: 1px solid #344057;
+
     display: flex;
     align-items: center;
+
     gap: 10px;
-    padding: 10px 18px;
+    padding: 10px 12px 10px 18px;
 
     .avatar {
       display: grid;
       place-items: center;
+      flex-shrink: 0;
+
       width: 34px;
       height: 40px;
+
       border-radius: 50%;
       background: #675cf3;
       color: white;
+
       font-size: 15px;
     }
 
-    div {
-      display: grid;
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
       flex: 1;
+      min-width: 0;
+
+      overflow: hidden;
     }
 
-    b {
+    .profile-info b {
       color: white;
       font-size: 14px;
+      line-height: 20px;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
     }
 
-    small {
+    .profile-info small {
       font-size: 14px;
-    }
+      line-height: 20px;
 
-    button {
-      border: 0;
-      background: none;
-      color: #8590a7;
-      padding: 5px;
+      white-space: nowrap;
+      overflow: visible;
     }
   }
+}
+
+/* 로그아웃 */
+.logout-button {
+  flex-shrink: 0;
+
+  border: 0;
+  background: transparent;
+
+  padding: 6px 0 6px 4px;
+
+  color: #8f9bb2;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+  white-space: nowrap;
+
+  transition: color 0.18s ease;
+}
+
+.logout-button:hover {
+  color: white;
 }
 
 .sidebar-toolbar,
@@ -105,7 +142,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+
     padding: 12px 20px;
+
     background: #172136;
     color: white;
 
@@ -117,8 +156,10 @@
     button {
       min-height: 44px;
       padding: 8px 14px;
+
       border: 1px solid #69758c;
       border-radius: 8px;
+
       background: transparent;
       color: white;
     }
@@ -126,13 +167,17 @@
 
   .fitmap-sidebar.mobile-sidebar {
     inset: 0 auto 0 0;
+
     margin: 0;
     padding: 0;
     border: 0;
+
     width: 300px;
     max-width: 100%;
+
     height: 100dvh;
     max-height: 100dvh;
+
     overflow-y: auto;
 
     &[open] {
@@ -156,21 +201,28 @@
   .sidebar-dialog-content {
     display: flex;
     flex-direction: column;
+
     min-height: 100%;
     width: 100%;
+
     padding-bottom: env(safe-area-inset-bottom);
   }
 
   .sidebar-close {
     position: absolute;
+
     top: 18px;
     right: 14px;
+
     width: 44px;
     height: 44px;
+
     border: 0;
     border-radius: 8px;
+
     background: #ffffff20;
     color: white;
+
     font-size: 22px;
   }
 }
@@ -183,18 +235,27 @@
 
 .menu-lines {
   position: relative;
+
   display: block;
+
   width: 24px;
   height: 20px;
 
   span {
     position: absolute;
+
     left: 0;
+
     width: 24px;
     height: 2px;
+
     border-radius: 2px;
+
     background: currentColor;
-    transition: transform 240ms ease, opacity 240ms ease;
+
+    transition:
+      transform 240ms ease,
+      opacity 240ms ease;
   }
 
   span:nth-child(1) {
@@ -226,19 +287,22 @@
 }
 
 @media (max-width: 1000px) {
-
   .sidebar-toolbar .menu-toggle,
   .sidebar-close.menu-toggle {
     display: grid;
     place-items: center;
+
     width: 44px;
     height: 44px;
+
     padding: 0;
   }
 
   .fitmap-sidebar.mobile-sidebar {
     width: 100%;
+
     background: transparent;
+
     pointer-events: auto;
 
     &::backdrop {
@@ -252,7 +316,9 @@
     .sidebar-dialog-content {
       width: 300px;
       max-width: 100%;
+
       background: #172136;
+
       animation: menu-slide-in 240ms ease both;
     }
 
@@ -263,15 +329,18 @@
 
   .sidebar-close.menu-toggle {
     position: fixed;
+
     z-index: 1;
+
     top: 12px;
     right: 20px;
+
     background: #172136;
+
     border: 1px solid #69758c;
   }
 
   @starting-style {
-
     .is-open .menu-lines span:nth-child(1),
     .is-open .menu-lines span:nth-child(3) {
       transform: none;
@@ -309,7 +378,7 @@
     transform: translateX(-100%);
   }
 }
-
+  
 @keyframes menu-backdrop-in {
   from {
     opacity: 0;

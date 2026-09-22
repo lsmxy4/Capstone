@@ -20,44 +20,140 @@ type Page =
   | "places"
   | "favorites";
 
-export default function App() {
+type User = {
+  email: string;
+  name?: string;
+};
 
-  const path = window.location.pathname.replace(/\/+$/, "") || "/";
-  const initialPage: Page = path === "/login" ? "login" : path === "/signup" ? "signup" : path === "/exercise" ? "exercise" : path === "/places" ? "places" : path === "/favorites" ? "favorites" : path === "/dashboard" ? "dashboard" : "landing";
+export default function App() {
+  const path =
+    window.location.pathname.replace(/\/+$/, "") || "/";
+
+  const initialPage: Page =
+    path === "/login"
+      ? "login"
+      : path === "/signup"
+      ? "signup"
+      : path === "/exercise"
+      ? "exercise"
+      : path === "/places"
+      ? "places"
+      : path === "/favorites"
+      ? "favorites"
+      : path === "/dashboard"
+      ? "dashboard"
+      : "landing";
+
   const [page, setPage] = useState<Page>(initialPage);
 
+  // 현재 로그인한 사용자
+  const [user, setUser] = useState<User | null>(null);
+
+  // 페이지 이동
+  const navigate = (
+    nextPage: Page,
+    path: string
+  ) => {
+    window.history.pushState({}, "", path);
+    setPage(nextPage);
+  };
+
+  // 로그인 성공
+  const handleLoginSuccess = (
+    loggedInUser: User
+  ) => {
+    console.log(
+      "로그인 성공!",
+      loggedInUser
+    );
+
+    // 로그인 사용자 저장
+    setUser(loggedInUser);
+
+    // Dashboard로 이동
+    window.history.pushState(
+      {},
+      "",
+      "/dashboard"
+    );
+
+    setPage("dashboard");
+  };
+
+  // 로그아웃
+  const handleLogout = () => {
+    console.log("로그아웃");
+
+    // 로그인 사용자 삭제
+    setUser(null);
+
+    // "/" 주소로 이동
+    window.history.pushState(
+      {},
+      "",
+      "/"
+    );
+
+    // Landing 화면으로 이동
+    setPage("landing");
+  };
+
+  // 로그인 화면
   if (page === "login") {
     return (
       <Login
-        onLoginSuccess={() => { window.history.pushState({}, "", "/dashboard"); setPage("dashboard") }}
-        onNavigateSignup={() => setPage("signup")}
+        onLoginSuccess={
+          handleLoginSuccess
+        }
+        onNavigateSignup={() => {
+          navigate(
+            "signup",
+            "/signup"
+          );
+        }}
       />
     );
   }
 
+  // 회원가입 화면
   if (page === "signup") {
     return (
       <Signup
-        onNavigateLogin={() => setPage("login")}
+        onNavigateLogin={() => {
+          navigate(
+            "login",
+            "/login"
+          );
+        }}
       />
     );
   }
 
+  // 운동 정보
   if (page === "exercise") {
     return <ExerciseInfo />;
   }
 
+  // Dashboard
   if (page === "dashboard") {
-    return <Dashboard />;
+    return (
+      <Dashboard
+        user={user}
+        onLogout={handleLogout}
+      />
+    );
   }
 
+  // 주변 장소
   if (page === "places") {
     return <NearbyPlaces />;
   }
 
+  // 즐겨찾기
   if (page === "favorites") {
     return <Favorites />;
   }
 
+  // 기본 화면
   return <Landing />;
 }
