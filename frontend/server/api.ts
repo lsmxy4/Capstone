@@ -10,8 +10,20 @@ class ApiError extends Error {
 }
 
 async function upstream<T>(url: URL, headers?: Record<string, string>): Promise<T> {
-  const response = await fetch(url, { headers, signal: AbortSignal.timeout(12000) })
-  if (!response.ok) throw new ApiError(502, `외부 API 요청이 거절되었습니다 (${response.status}). 서버의 인증키와 활용 승인을 확인하세요.`)
+  let response = await fetch(url, { headers, signal: AbortSignal.timeout(12000) })
+  if (response.status >= 500 && response.status < 600) {
+    await new Promise(resolve => setTimeout(resolve, 300))
+    response = await fetch(url, { headers, signal: AbortSignal.timeout(12000) })
+  }
+  if (!response.ok) {
+    console.warn(`외부 API 오류: ${url.hostname}${url.pathname} HTTP ${response.status}`)
+    const message = response.status === 401 || response.status === 403
+      ? '외부 API 인증이 거절되었습니다. 서버의 인증키와 활용 승인을 확인하세요.'
+      : response.status === 429
+        ? '외부 API 요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.'
+        : '외부 API 서버가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.'
+    throw new ApiError(502, message)
+  }
   try { return await response.json() as T } catch { throw new ApiError(502, 'API 응답을 읽을 수 없습니다. 인증키와 서비스 활용 승인을 확인하세요.') }
 }
 
@@ -129,6 +141,8 @@ async function airQuality(config: Config, lat: number, lon: number) {
   const { stationName, item } = selected
 
   return {
+    source: 'AirKorea',
+    warning: null,
     stationName,
     measuredAt: item.dataTime ?? null,
     overallGrade: airGrade(item.khaiGrade),
@@ -138,7 +152,46 @@ async function airQuality(config: Config, lat: number, lon: number) {
   }
 }
 
+function dustGrade(value: number | null, good: number, moderate: number, bad: number) {
+  if (value == null) return '정보 없음'
+  return value <= good ? '좋음' : value <= moderate ? '보통' : value <= bad ? '나쁨' : '매우나쁨'
+}
+
+async function modelAirQuality(lat: number, lon: number) {
+  const url = new URL('https://air-quality-api.open-meteo.com/v1/air-quality')
+  url.search = new URLSearchParams({ latitude: String(lat), longitude: String(lon), current: 'pm10,pm2_5', timezone: 'Asia/Seoul' }).toString()
+  const data = await upstream<{ current?: { time?: string; pm10?: number | null; pm2_5?: number | null } }>(url)
+  const pm10 = data.current?.pm10 ?? null
+  const pm25 = data.current?.pm2_5 ?? null
+  if (pm10 == null && pm25 == null) throw new ApiError(502, '대체 대기질 자료를 제공하지 않습니다.')
+  const pm10Grade = dustGrade(pm10, 30, 80, 150)
+  const pm25Grade = dustGrade(pm25, 15, 35, 75)
+  const severity: Record<string, number> = { '좋음': 0, '보통': 1, '나쁨': 2, '매우나쁨': 3 }
+  const overallGrade = [pm10Grade, pm25Grade].filter(grade => grade !== '정보 없음')
+    .sort((a, b) => severity[b] - severity[a])[0] ?? '정보 없음'
+  return {
+    source: 'Open-Meteo',
+    warning: 'AirKorea 연결이 지연되어 모델 추정치를 표시합니다. 측정소 관측값과 다를 수 있습니다.',
+    stationName: '현재 위치 인근',
+    measuredAt: data.current?.time ?? null,
+    overallGrade,
+    pm10: { value: pm10, grade: pm10Grade },
+    pm25: { value: pm25, grade: pm25Grade },
+    ozone: { value: null, grade: '정보 없음' },
+  }
+}
+
+async function resilientAirQuality(config: Config, lat: number, lon: number) {
+  try { return await airQuality(config, lat, lon) }
+  catch (originalError) {
+    if (originalError instanceof ApiError && originalError.status === 503) throw originalError
+    try { return await modelAirQuality(lat, lon) }
+    catch { throw originalError }
+  }
+}
+
 export function createApiHandler(config: Config) {
+  const airCache = new Map<string, { expiresAt: number; value: Awaited<ReturnType<typeof resilientAirQuality>> }>()
   return async (req: IncomingMessage, res: ServerResponse, next: Next) => {
     const request = new URL(req.url ?? '/', 'http://localhost')
     if (!request.pathname.startsWith('/api/fitmap/')) return next()
@@ -157,7 +210,14 @@ export function createApiHandler(config: Config) {
         if (observation.status === 'rejected') throw observation.reason
         result = { ...parseWeather(observation.value.items, forecast.status === 'fulfilled' ? forecast.value.items : []), observedAt: `${observation.value.base.date} ${observation.value.base.time}`, warning: forecast.status === 'rejected' ? '강수확률과 하늘상태 예보를 불러오지 못했습니다.' : null }
       } else if (route === 'air-quality') {
-        result = await airQuality(config, lat, lon)
+        const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)}`
+        const cached = airCache.get(cacheKey)
+        if (cached && cached.expiresAt > Date.now()) result = cached.value
+        else {
+          const value = await resilientAirQuality(config, lat, lon)
+          airCache.set(cacheKey, { value, expiresAt: Date.now() + 5 * 60_000 })
+          result = value
+        }
       } else if (route === 'uv') {
         result = await uvIndex(config, lat, lon)
       } else {
@@ -170,7 +230,8 @@ export function createApiHandler(config: Config) {
           url.searchParams.set('query', queries[request.searchParams.get('exercise') ?? ''] ?? '공원')
           url.searchParams.set('radius', '10000')
           url.searchParams.set('sort', 'distance')
-          const requestedLimit = Number(request.searchParams.get('limit'))
+          const limit = request.searchParams.get('limit')
+          const requestedLimit = limit == null ? NaN : Number(limit)
           url.searchParams.set('size', String(Number.isInteger(requestedLimit) ? Math.min(15, Math.max(1, requestedLimit)) : 3))
         }
         const data = await upstream<{ documents: Record<string, string>[] }>(url, { Authorization: `KakaoAK ${config.KAKAO_REST_API_KEY}` })

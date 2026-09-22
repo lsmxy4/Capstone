@@ -35,7 +35,7 @@ export function useLocationData(coordinates: Coordinates | null, exercise: strin
     const controller = new AbortController()
     if (!coordinates) { setPlaces(empty()); return }
     setPlaces({ data: null, loading: true, error: null })
-    getPlaces(coordinates, exercise, controller.signal).then(data => {
+    getPlaces(coordinates, exercise, controller.signal, 3).then(data => {
       if (!controller.signal.aborted) setPlaces({ data, loading: false, error: null })
     }).catch(error => { if (!controller.signal.aborted) setPlaces({ data: null, loading: false, error: error.message ?? '장소 조회 실패' }) })
     return () => controller.abort()
