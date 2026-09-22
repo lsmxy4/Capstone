@@ -14,9 +14,14 @@ H2 데이터베이스는 기본적으로 `backend/data/fitmap.mv.db`에 저장�
 | POST | `/api/auth/routes` | 로그인한 사용자의 위치 점 저장 |
 | GET | `/api/auth/routes?date=YYYY-MM-DD` | 한국 시간 날짜별 경로 조회 |
 | GET | `/api/auth/routes/dates` | 경로가 저장된 날짜 목록 |
+| GET | `/api/auth/favorites` | 로그인한 사용자의 즐겨찾기 목록 |
+| PUT | `/api/auth/favorites/{placeId}` | 장소를 즐겨찾기에 저장 |
+| DELETE | `/api/auth/favorites/{placeId}` | 즐겨찾기 해제 |
 
 회원가입 JSON에는 `name`, `nickname`, `email`, `password`, `agreeTerms: true`, `agreePrivacy: true`가 필요합니다. 응답 형식은 기존 프런트엔드와 같습니다. 비밀번호는 BCrypt 해시로 저장하며, 로그인 세션은 30일 유효한 HttpOnly 쿠키입니다. 서버에는 세션 토큰의 SHA-256 해시만 저장합니다.
 
 환경 변수: `PORT`, `JDBC_URL`, `DB_USER`, `DB_PASSWORD`, `COOKIE_SECURE`, `FRONTEND_URL`. HTTPS 운영 환경에서는 `COOKIE_SECURE=true`를 설정하세요. 테스트는 `mvn test`로 실행합니다.
 
 운동 정보 페이지는 위치 권한을 받은 뒤 정확도와 이동 거리 조건을 통과한 위치 점을 저장합니다. `POST /api/auth/routes`에는 `id`(UUID), `latitude`, `longitude`, `recordedAt`(ISO 8601)을 보냅니다. 서버가 `recordedAt`을 한국 시간 날짜로 변환해 `route_points`에 저장합니다. 기록은 로그인한 사용자에게만 허용되며, 날짜를 지정하지 않은 조회는 오늘 경로를 반환합니다.
+
+즐겨찾기 저장에는 카카오 장소 정보 `id`, `name`, `category`, `address`, `distance`, `latitude`, `longitude`, `url`을 JSON으로 보냅니다. 응답은 `{ "favorite": { ... } }`입니다. 목록 응답은 `{ "favorites": [{ ...장소 정보, "savedAt": "..." }] }`이며 최신 저장 순입니다. 모든 경로는 로그인 세션 쿠키가 필요합니다. 프런트엔드 즐겨찾기 페이지에서는 `src/api/favorites.ts`의 `getFavorites()`와 `removeFavorite()`을 사용할 수 있습니다.

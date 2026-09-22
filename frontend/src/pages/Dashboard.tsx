@@ -46,7 +46,7 @@ export default function Dashboard() {
           {places.loading && <p role="status">주변 장소를 불러오는 중…</p>}
           {places.error && <p className="api-message" role="alert">{places.error}</p>}
           {places.data?.length === 0 && <p>주변에서 해당 운동 장소를 찾지 못했습니다.</p>}
-          <div className="place-list">{places.data?.slice(0, 3).map(place => <article key={place.id}><span className="place-icon"><Icon name="pin" /></span><div><h3>{place.name}</h3><p>{place.category.split(' > ').at(-1)}</p><small>{place.address}</small><small><Icon name="pin" size={11} /><AnimatedNumber text={place.distance == null ? '거리 미제공' : place.distance >= 1000 ? `${(place.distance / 1000).toFixed(1)}km` : `${place.distance}m`} /></small></div>{place.url && <a className="place-link" href={place.url} target="_blank" rel="noreferrer" aria-label={`${place.name} 카카오맵에서 보기`}>↗</a>}</article>)}</div>
+          <div className="place-list">{places.data?.slice(0, 3).map(place => <article key={place.id}><span className="place-icon"><Icon name="pin" /></span><div><h3>{place.url ? <a href={place.url} target="_blank" rel="noreferrer" aria-label={`${place.name} 카카오맵에서 보기`}>{place.name}</a> : place.name}</h3><p>{place.category.split(' > ').at(-1)}</p><small>{place.address}</small><small><Icon name="pin" size={11} /><AnimatedNumber text={place.distance == null ? '거리 미제공' : place.distance >= 1000 ? `${(place.distance / 1000).toFixed(1)}km` : `${place.distance}m`} /></small></div>{place.url && <a className="place-link" href={place.url} target="_blank" rel="noreferrer" aria-label={`${place.name} 카카오맵에서 보기`}>↗</a>}</article>)}</div>
         </section>
       </div>
     </main>

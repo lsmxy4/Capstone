@@ -1,12 +1,8 @@
 package com.fitmap.backend;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,9 +24,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class RouteController {
     private static final ZoneId KOREA = ZoneId.of("Asia/Seoul");
     private final JdbcTemplate jdbc;
+    private final SessionAuth sessionAuth;
 
-    public RouteController(JdbcTemplate jdbc) {
+    public RouteController(JdbcTemplate jdbc, SessionAuth sessionAuth) {
         this.jdbc = jdbc;
+        this.sessionAuth = sessionAuth;
     }
 
     public record PointRequest(UUID id, Double latitude, Double longitude, Instant recordedAt) {}
@@ -41,7 +39,7 @@ public class RouteController {
         @CookieValue(name = "fitmap_session", required = false) String token,
         @RequestBody PointRequest point
     ) {
-        UUID userId = requireUser(token);
+        UUID userId = sessionAuth.requireUser(token);
         validate(point);
         LocalDate date = point.recordedAt().atZone(KOREA).toLocalDate();
         try {
@@ -60,7 +58,7 @@ public class RouteController {
         @CookieValue(name = "fitmap_session", required = false) String token,
         @RequestParam(required = false) LocalDate date
     ) {
-        UUID userId = requireUser(token);
+        UUID userId = sessionAuth.requireUser(token);
         LocalDate day = date == null ? LocalDate.now(KOREA) : date;
         List<RoutePoint> points = jdbc.query("""
             SELECT id, latitude, longitude, recorded_at FROM route_points
@@ -73,19 +71,11 @@ public class RouteController {
 
     @GetMapping("/dates")
     public Map<String, List<LocalDate>> dates(@CookieValue(name = "fitmap_session", required = false) String token) {
-        UUID userId = requireUser(token);
+        UUID userId = sessionAuth.requireUser(token);
         List<LocalDate> dates = jdbc.query("""
             SELECT DISTINCT route_date FROM route_points WHERE user_id = ? ORDER BY route_date DESC
             """, (rs, row) -> rs.getObject("route_date", LocalDate.class), userId);
         return Map.of("dates", dates);
-    }
-
-    private UUID requireUser(String token) {
-        if (token == null || token.isBlank()) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        List<UUID> ids = jdbc.query("SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at > ?",
-            (rs, row) -> rs.getObject("user_id", UUID.class), hash(token), Instant.now());
-        if (ids.isEmpty()) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        return ids.getFirst();
     }
 
     private void validate(PointRequest point) {
@@ -98,12 +88,4 @@ public class RouteController {
         }
     }
 
-    private static String hash(String value) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
-                .digest(value.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException error) {
-            throw new IllegalStateException(error);
-        }
-    }
 }

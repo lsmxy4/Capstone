@@ -4,6 +4,7 @@ import Sidebar from '../components/layout/Sidebar'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { getPlaces, getRegion } from '../api/kakao'
 import { getWeather } from '../api/weather'
+import { addFavorite, getFavorites, removeFavorite } from '../api/favorites'
 import type { Place } from '../types/place'
 import KakaoMap from '../components/map/KakaoMap'
 
@@ -63,6 +64,20 @@ export default function NearbyPlaces() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  const [favoritePending, setFavoritePending] = useState<Set<string>>(new Set())
+  const [favoriteError, setFavoriteError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    getFavorites().then(result => {
+      if (active) setFavorites(new Set(result.favorites.map(place => place.id)))
+    }).catch(reason => {
+      if (active && !(reason instanceof Error && reason.message.includes('로그인'))) {
+        setFavoriteError(reason instanceof Error ? reason.message : '즐겨찾기를 불러오지 못했습니다.')
+      }
+    })
+    return () => { active = false }
+  }, [])
 
   useEffect(() => {
     if (!location.coordinates) return
@@ -106,16 +121,29 @@ export default function NearbyPlaces() {
   const filteredPlaces = filter === '전체' ? places : places.filter(place => placeType(place) === filter)
   const displayedPlaces = weatherPending && !filterTouched.current ? [] : filteredPlaces
 
-  const toggleFavorite = (name: string) => {
-    setFavorites((prev) => {
-      const next = new Set(prev)
-      if (next.has(name)) {
-        next.delete(name)
-      } else {
-        next.add(name)
-      }
-      return next
-    })
+  const toggleFavorite = async (place: Place) => {
+    if (favoritePending.has(place.id)) return
+    const wasFavorite = favorites.has(place.id)
+    setFavoritePending(prev => new Set(prev).add(place.id))
+    setFavoriteError(null)
+    try {
+      if (wasFavorite) await removeFavorite(place.id)
+      else await addFavorite(place)
+      setFavorites(prev => {
+        const next = new Set(prev)
+        if (wasFavorite) next.delete(place.id)
+        else next.add(place.id)
+        return next
+      })
+    } catch (reason) {
+      setFavoriteError(reason instanceof Error ? reason.message : '즐겨찾기를 저장하지 못했습니다.')
+    } finally {
+      setFavoritePending(prev => {
+        const next = new Set(prev)
+        next.delete(place.id)
+        return next
+      })
+    }
   }
 
   return (
@@ -166,6 +194,7 @@ export default function NearbyPlaces() {
 
               {location.error && <p className="empty-note" role="alert">{location.error}</p>}
               {error && <p className="empty-note" role="alert">{error}</p>}
+              {favoriteError && <p className="empty-note" role="alert">{favoriteError} {favoriteError.includes('로그인') && <a href="/login">로그인하기</a>}</p>}
               {loading && <p className="empty-note" role="status">주변 장소를 불러오는 중…</p>}
               {weatherPending && !filterTouched.current && <p className="empty-note" role="status">현재 날씨를 확인해 장소 필터를 선택하는 중…</p>}
 
@@ -188,7 +217,8 @@ export default function NearbyPlaces() {
                         className={isFavorited ? 'favorited' : ''}
                         aria-pressed={isFavorited}
                         aria-label={isFavorited ? `${place.name} 즐겨찾기 해제` : `${place.name} 즐겨찾기 추가`}
-                        onClick={() => toggleFavorite(place.id)}
+                        disabled={favoritePending.has(place.id)}
+                        onClick={() => toggleFavorite(place)}
                       >
                         <Icon name="heart" size={15} filled={isFavorited} />
                       </button>

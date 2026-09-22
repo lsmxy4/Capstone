@@ -26,3 +26,17 @@ CREATE TABLE IF NOT EXISTS route_points (
 
 CREATE INDEX IF NOT EXISTS idx_route_points_user_date_time
   ON route_points(user_id, route_date, recorded_at);
+
+CREATE TABLE IF NOT EXISTS favorite_places (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  place_id VARCHAR(100) NOT NULL,
+  name VARCHAR(200) NOT NULL,
+  category VARCHAR(300) NOT NULL,
+  address VARCHAR(300) NOT NULL,
+  distance_meters DOUBLE PRECISION,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  url VARCHAR(500),
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  PRIMARY KEY (user_id, place_id)
+);

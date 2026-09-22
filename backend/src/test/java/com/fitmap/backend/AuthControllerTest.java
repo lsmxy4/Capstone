@@ -1,7 +1,9 @@
 package com.fitmap.backend;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -86,5 +88,43 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.points[0].latitude").value(37.6));
         mvc.perform(get("/api/auth/routes/dates").cookie(cookie))
             .andExpect(status().isOk()).andExpect(jsonPath("$.dates[0]").value(day));
+    }
+
+    @Test
+    void favoritesArePersistedPerUserAndCanBeRemoved() throws Exception {
+        String email = "favorite-" + UUID.randomUUID() + "@example.com";
+        String signup = """
+            {"name":"Runner","nickname":"runner","email":"%s","password":"password123","agreeTerms":true,"agreePrivacy":true}
+            """.formatted(email);
+        mvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content(signup))
+            .andExpect(status().isCreated());
+        String login = "{\"email\":\"%s\",\"password\":\"password123\"}".formatted(email);
+        String header = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content(login))
+            .andExpect(status().isOk()).andReturn().getResponse().getHeader("Set-Cookie");
+        Cookie cookie = new Cookie("fitmap_session", header.split("[=;]")[1]);
+        String place = """
+            {"id":"12345","name":"운동장","category":"스포츠","address":"서울시","distance":100,
+             "latitude":37.5,"longitude":127.0,"url":"https://place.map.kakao.com/12345"}
+            """;
+        mvc.perform(get("/api/auth/favorites")).andExpect(status().isUnauthorized());
+        mvc.perform(put("/api/auth/favorites/12345").contentType(MediaType.APPLICATION_JSON).content(place))
+            .andExpect(status().isUnauthorized());
+        mvc.perform(put("/api/auth/favorites/12345").cookie(cookie)
+            .contentType(MediaType.APPLICATION_JSON).content(place)).andExpect(status().isOk());
+        mvc.perform(get("/api/auth/favorites").cookie(cookie)).andExpect(status().isOk())
+            .andExpect(jsonPath("$.favorites.length()").value(1))
+            .andExpect(jsonPath("$.favorites[0].id").value("12345"));
+        String anotherEmail = "favorite-" + UUID.randomUUID() + "@example.com";
+        mvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON)
+            .content(signup.replace(email, anotherEmail))).andExpect(status().isCreated());
+        String otherHeader = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+            .content(login.replace(email, anotherEmail))).andExpect(status().isOk())
+            .andReturn().getResponse().getHeader("Set-Cookie");
+        Cookie otherCookie = new Cookie("fitmap_session", otherHeader.split("[=;]")[1]);
+        mvc.perform(get("/api/auth/favorites").cookie(otherCookie)).andExpect(status().isOk())
+            .andExpect(jsonPath("$.favorites.length()").value(0));
+        mvc.perform(delete("/api/auth/favorites/12345").cookie(cookie)).andExpect(status().isOk());
+        mvc.perform(get("/api/auth/favorites").cookie(cookie)).andExpect(status().isOk())
+            .andExpect(jsonPath("$.favorites.length()").value(0));
     }
 }
