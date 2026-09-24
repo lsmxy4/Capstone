@@ -1,0 +1,57 @@
+main { max-width: 1280px; margin: auto; padding: 38px 42px 20px; }
+
+h1 { font-size: 27px; letter-spacing: -1.2px; line-height: 1.5; }
+
+.location {
+  font-size: 12px;
+  white-space: nowrap;
+  background: white;
+  border: 1px solid #e3e9e4;
+  border-radius: 8px;
+  padding: 9px 12px;
+  & small { margin-left: 8px; color: #829086; font-size: 10px; }
+}
+
+h2 { font-size: 17px; letter-spacing: -.5px; }
+
+h3 { font-size: 14px; }
+
+.weather-card>p { font-size: 11px; color: #8b978f; }
+
+.map-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 168px;
+  margin-top: 18px;
+  border-radius: 8px;
+  background-color: #f0f3ed;
+  background-image: linear-gradient(#e6ebe280 1px, transparent 1px), linear-gradient(90deg, #e6ebe280 1px, transparent 1px);
+  background-size: 28px 28px;
+  & strong { font-size: 12px; font-weight: 500; }
+  & p { font-size: 10px; color: #859380; margin-top: 5px; }
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  color: #97a296;
+  font-size: 11px;
+  padding: 25px 0 0;
+  & span { font-size: 10px; }
+}
+
+@media (min-width: 1600px) {
+  main { padding-top: 48px; }
+}
+
+@media (max-width: 1100px) {
+  main { padding: 28px 25px; }
+}
+
+@media (max-width: 760px) {
+  main { padding: 24px 20px 10px; }
+  h1 { font-size: 24px; }
+  footer span { max-width: 200px; text-align: right; }
+}

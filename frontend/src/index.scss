@@ -1,0 +1,38 @@
+:root {
+  font-family: Inter, 'Pretendard', 'Malgun Gothic', sans-serif;
+  color: #253b34;
+  background: #f6f8f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; }
+
+a { color: inherit; text-decoration: none; }
+
+button { font: inherit; cursor: pointer; }
+
+h1,
+h2,
+h3,
+p { margin: 0; }
+
+button,
+a { -webkit-tap-highlight-color: transparent; }
+
+a:focus-visible,
+button:focus-visible { outline: 3px solid #258363; outline-offset: 5px; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+
+::selection { background: #cae9da; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
