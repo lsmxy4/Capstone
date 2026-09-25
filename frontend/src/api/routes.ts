@@ -8,6 +8,7 @@ class RouteError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   for (let attempt = 0; attempt < 3; attempt++) {
+    init?.signal?.throwIfAborted()
     try {
       const response = await fetch(`/api/auth/routes${path}`, { credentials: 'same-origin', ...init })
       const body = await response.text()
@@ -18,6 +19,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       if (!response.ok || !data) throw new RouteError('서버 연결이 잠시 끊겼습니다. 자동으로 다시 시도합니다.', true)
       return data as T
     } catch (error) {
+      init?.signal?.throwIfAborted()
       if (error instanceof RouteError && !error.retryable) throw error
       if (attempt === 2) throw new Error('서버 연결이 잠시 끊겼습니다. 자동으로 다시 시도합니다.')
       await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)))
@@ -26,8 +28,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   throw new Error('서버 연결이 잠시 끊겼습니다. 자동으로 다시 시도합니다.')
 }
 
-export const getRoute = (date: string): Promise<RouteDay> => request(`?date=${encodeURIComponent(date)}`)
-export const getRouteDates = (): Promise<{ dates: string[] }> => request('/dates')
-export const saveRoutePoint = (point: RecordedPoint): Promise<{ date: string; point: RecordedPoint }> => request('', {
+export const getRoute = (date: string, signal?: AbortSignal): Promise<RouteDay> => request(`?date=${encodeURIComponent(date)}`, { signal })
+export const getRouteDates = (signal?: AbortSignal): Promise<{ dates: string[] }> => request('/dates', { signal })
+export const saveRoutePoint = (point: RecordedPoint, signal?: AbortSignal): Promise<{ date: string; point: RecordedPoint }> => request('', {
+  signal,
   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(point),
 })

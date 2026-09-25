@@ -37,7 +37,8 @@ class AuthControllerTest {
             {"name":"Tester","nickname":"runner","email":"TEST@example.com","password":"password123","agreeTerms":true,"agreePrivacy":true}
             """;
         mvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content(signup))
-            .andExpect(status().isCreated()).andExpect(jsonPath("$.user.email").value("test@example.com"));
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.user.email").value("test@example.com"))
+            .andExpect(jsonPath("$.user.name").value("Tester"));
         mvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content(signup))
             .andExpect(status().isConflict());
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
@@ -45,10 +46,12 @@ class AuthControllerTest {
             .andExpect(status().isUnauthorized());
         String header = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
             .content("{\"email\":\"TEST@example.com\",\"password\":\"password123\"}"))
-            .andExpect(status().isOk()).andReturn().getResponse().getHeader("Set-Cookie");
+            .andExpect(status().isOk()).andExpect(jsonPath("$.user.name").value("Tester"))
+            .andReturn().getResponse().getHeader("Set-Cookie");
         Cookie cookie = new Cookie("fitmap_session", header.split("[=;]")[1]);
         mvc.perform(get("/api/auth/me").cookie(cookie)).andExpect(status().isOk())
-            .andExpect(jsonPath("$.user.nickname").value("runner"));
+            .andExpect(jsonPath("$.user.nickname").value("runner"))
+            .andExpect(jsonPath("$.user.name").value("Tester"));
         mvc.perform(post("/api/auth/logout").cookie(cookie)).andExpect(status().isOk());
         mvc.perform(get("/api/auth/me").cookie(cookie)).andExpect(status().isUnauthorized());
     }

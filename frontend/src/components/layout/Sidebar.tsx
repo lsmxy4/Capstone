@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import Icon from '../Icon'
+import { useAuth } from '../../contexts/AuthContext'
 import './Sidebar.scss'
 
-type SidebarProps = {
-  onLogout?: () => void
-}
-
-export default function Sidebar({
-  onLogout,
-}: SidebarProps) {
+export default function Sidebar() {
+  const { user, loading, error, onLogout } = useAuth()
+  const displayName = user?.name?.trim() || user?.email || '게스트'
+  const [loggingOut, setLoggingOut] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   const [open, setOpen] = useState(false)
@@ -183,21 +181,25 @@ export default function Sidebar({
       <div className="profile">
 
         <span className="avatar">
-          김
+          {user ? Array.from(displayName)[0] : '?'}
         </span>
 
         <div className="profile-info">
-          <b>김민수</b>
-          <small>사용자 계정</small>
+          <b>{loading ? '불러오는 중…' : error ? '조회 실패' : displayName}</b>
+          <small>{error || (user ? '사용자 계정' : '로그인이 필요합니다')}</small>
         </div>
 
-        <button
+        {user ? <button
           type="button"
           className="logout-button"
-          onClick={onLogout}
+          disabled={loggingOut}
+          onClick={async () => {
+            setLoggingOut(true)
+            try { await onLogout() } finally { setLoggingOut(false) }
+          }}
         >
-          로그아웃
-        </button>
+          {loggingOut ? '로그아웃 중…' : '로그아웃'}
+        </button> : !loading && <a href="/login" className="logout-button">로그인</a>}
 
       </div>
     </>

@@ -7,6 +7,7 @@ import { getWeather } from '../api/weather'
 import { addFavorite, getFavorites, removeFavorite } from '../api/favorites'
 import type { Place } from '../types/place'
 import KakaoMap from '../components/map/KakaoMap'
+import { useAuth } from '../contexts/AuthContext'
 
 /**
  * 주변 운동 장소 페이지
@@ -55,6 +56,7 @@ function placeType(place: Place): Exclude<Filter, '전체'> {
 }
 
 export default function NearbyPlaces() {
+  const { user, loading: authLoading } = useAuth()
   const location = useGeolocation()
   const [filter, setFilter] = useState<Filter>('전체')
   const [weatherPending, setWeatherPending] = useState(false)
@@ -68,6 +70,7 @@ export default function NearbyPlaces() {
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (authLoading || !user) return
     let active = true
     getFavorites().then(result => {
       if (active) setFavorites(new Set(result.favorites.map(place => place.id)))
@@ -77,7 +80,7 @@ export default function NearbyPlaces() {
       }
     })
     return () => { active = false }
-  }, [])
+  }, [user, authLoading])
 
   useEffect(() => {
     if (!location.coordinates) return
@@ -122,6 +125,10 @@ export default function NearbyPlaces() {
   const displayedPlaces = weatherPending && !filterTouched.current ? [] : filteredPlaces
 
   const toggleFavorite = async (place: Place) => {
+    if (authLoading || !user) {
+      setFavoriteError('즐겨찾기를 저장하려면 로그인해 주세요.')
+      return
+    }
     if (favoritePending.has(place.id)) return
     const wasFavorite = favorites.has(place.id)
     setFavoritePending(prev => new Set(prev).add(place.id))

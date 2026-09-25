@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import './Favorites.scss'
 import Sidebar from '../components/layout/Sidebar'
 import { getFavorites, removeFavorite, type FavoritePlace } from '../api/favorites'
+import { useAuth } from '../contexts/AuthContext'
 
 function categoryOf(place: FavoritePlace) {
   const category = place.category.split(' > ').at(-1)?.trim() || '기타'
@@ -35,6 +36,7 @@ function distanceOf(place: FavoritePlace) {
 }
 
 export default function Favorites() {
+  const { user, loading: authLoading } = useAuth()
   const [places, setPlaces] = useState<FavoritePlace[]>([])
   const [selectedCategory, setSelectedCategory] = useState('전체')
   const [query, setQuery] = useState('')
@@ -44,6 +46,15 @@ export default function Favorites() {
   const [removingId, setRemovingId] = useState<string | null>(null)
 
   useEffect(() => {
+    if (authLoading) return
+    if (!user) {
+      setPlaces([])
+      setLoading(false)
+      setError('즐겨찾기를 사용하려면 로그인해 주세요.')
+      return
+    }
+    setLoading(true)
+    setError(null)
     let active = true
     getFavorites().then(result => {
       if (active) setPlaces(result.favorites)
@@ -53,7 +64,7 @@ export default function Favorites() {
       if (active) setLoading(false)
     })
     return () => { active = false }
-  }, [])
+  }, [user, authLoading])
 
   const categories = useMemo(() => ['전체', ...new Set(places.map(categoryOf))], [places])
   const filteredPlaces = useMemo(() => {
@@ -69,6 +80,10 @@ export default function Favorites() {
   }, [places, selectedCategory, query, sort])
 
   async function handleRemove(place: FavoritePlace) {
+    if (authLoading || !user) {
+      setError('즐겨찾기를 사용하려면 로그인해 주세요.')
+      return
+    }
     if (removingId) return
     setRemovingId(place.id)
     setError(null)

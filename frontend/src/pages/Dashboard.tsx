@@ -7,16 +7,6 @@ import { useLocationData } from '../hooks/useLocationData'
 import dashboardStyles from './Dashboard.scss?inline'
 import { dailyExerciseRecommendation } from '../utils/exerciseRecommendation'
 
-type User = {
-  email: string
-  name?: string
-}
-
-type DashboardProps = {
-  user: User | null
-  onLogout: () => void
-}
-
 const exercises: { name: string; icon: IconName }[] = [
   { name: '러닝', icon: 'run' },
   { name: '걷기', icon: 'walk' },
@@ -25,9 +15,7 @@ const exercises: { name: string; icon: IconName }[] = [
   { name: '수영', icon: 'swim' }
 ]
 
-export default function Dashboard({
-  onLogout,
-}: DashboardProps) {
+export default function Dashboard() {
 
   const [exercise, setExercise] = useState('러닝')
 
@@ -73,7 +61,7 @@ export default function Dashboard({
       <div className="dashboard">
 
         {/* 왼쪽 사이드바 */}
-        <Sidebar onLogout={onLogout} />
+        <Sidebar />
 
         <main id="top" className="content">
 
