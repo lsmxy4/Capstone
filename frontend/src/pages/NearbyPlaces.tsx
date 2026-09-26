@@ -1,3 +1,4 @@
+import LocationStatus from '../components/LocationStatus'
 import { loginUrl } from '../utils/authNavigation'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import nearbyPlacesStyles from './NearbyPlaces.scss?inline'
@@ -159,7 +160,7 @@ export default function NearbyPlaces() {
             <div className="header-actions">
               <button onClick={location.locate} disabled={location.loading}><Icon name="refresh" size={14} /> {location.loading ? '확인 중…' : '새로고침'}</button>
             </div>
-          </header>
+          </header><LocationStatus location={location} />
 
           <section className="explore-banner"><div><span>FIND YOUR NEXT MOVE</span><h2>가까운 곳에서 시작하는 좋은 습관.</h2><p>산책로부터 실내 운동 시설까지, 나에게 맞는 장소를 찾아보세요.</p></div><Icon name="map" size={64} /></section>
 

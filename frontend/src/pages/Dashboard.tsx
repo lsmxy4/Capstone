@@ -1,3 +1,4 @@
+import LocationStatus from '../components/LocationStatus'
 import { useState } from 'react'
 import Icon, { type IconName } from '../components/Icon'
 import Sidebar from '../components/layout/Sidebar'
@@ -113,7 +114,7 @@ export default function Dashboard() {
 
             </div>
 
-          </header>
+          </header><LocationStatus location={location} />
 
           <section className="daily-hero" aria-labelledby="daily-heading">
             <div className="hero-copy">
