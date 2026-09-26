@@ -1,41 +1,34 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Coordinates } from '../types/location'
-import { acquireAccurateLocation } from '../utils/acquireAccurateLocation'
+import { isUsableLocation, inaccurateLocationMessage } from '../utils/locationAccuracy'
 
 export function useGeolocation() {
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [accuracyMeters, setAccuracyMeters] = useState<number | null>(null)
-  const cancel = useRef<(() => void) | null>(null)
+  const requestId = useRef(0)
+  useEffect(() => () => { requestId.current++ }, [])
   const locate = useCallback(() => {
-    cancel.current?.()
-    setCoordinates(null)
-    setAccuracyMeters(null)
-    setError(null)
-    setLoading(false)
-    if (!window.isSecureContext) {
-      setError('위치 기능은 HTTPS 또는 localhost에서 사용할 수 있습니다. 휴대폰에서는 HTTPS 주소로 접속해 주세요.')
-      return
-    }
-    if (!navigator.geolocation) {
-      setError('현재 브라우저는 위치 조회를 지원하지 않습니다.')
-      return
-    }
+    const id = ++requestId.current
+    if (!navigator.geolocation) { setError('현재 브라우저는 위치 조회를 지원하지 않습니다.'); return }
     setLoading(true)
-    cancel.current = acquireAccurateLocation(navigator.geolocation, {
-      onAccuracy: setAccuracyMeters,
-      onSuccess: position => {
-        setCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude })
-        setError(null)
+    setError(null)
+    setCoordinates(null)
+    navigator.geolocation.getCurrentPosition(position => {
+      if (id !== requestId.current) return
+      if (!isUsableLocation(position.coords)) {
+        setError(inaccurateLocationMessage(position.coords.accuracy))
         setLoading(false)
-      },
-      onError: message => { setError(message); setLoading(false) },
-    })
+        return
+      }
+      setCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude })
+      setLoading(false)
+    }, failure => {
+      if (id !== requestId.current) return
+      setError(failure.code === 1 ? '위치 권한이 거부되었습니다. 브라우저 설정에서 허용 후 다시 시도해 주세요.' : failure.code === 3 ? '위치 확인 시간이 초과되었습니다. 다시 시도해 주세요.' : '위치를 확인할 수 없습니다. 위치 서비스를 확인해 주세요.')
+      setLoading(false)
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 })
   }, [])
-  useEffect(() => {
-    locate()
-    return () => { cancel.current?.() }
-  }, [locate])
-  return { coordinates, loading, error, accuracyMeters, locate }
+  useEffect(() => { locate() }, [locate])
+  return { coordinates, loading, error, locate }
 }
