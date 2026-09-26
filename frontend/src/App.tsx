@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import ExerciseInfo from "./pages/ExerciseInfo";
 import NearbyPlaces from "./pages/NearbyPlaces";
 import Favorites from "./pages/Favorites";
+import MyPage from "./pages/MyPage";
 import FeaturePreview, { isFeatureId } from "./components/FeaturePreview";
 import "./pages/FeaturePreview.scss";
 
@@ -23,6 +24,7 @@ const pagePaths = {
   dashboard: "/dashboard",
   places: "/places",
   favorites: "/favorites",
+  mypage: "/mypage",
   preview: "/preview/location",
 } as const;
 
@@ -123,6 +125,8 @@ export default function App() {
         return <NearbyPlaces />;
       case "favorites":
         return <Favorites />;
+      case "mypage":
+        return <MyPage />;
       default:
         return (
           <Landing

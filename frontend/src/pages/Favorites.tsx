@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import './Favorites.scss'
+import dashboardStyles from './Dashboard.scss?inline'
+import Icon from '../components/Icon'
 import Sidebar from '../components/layout/Sidebar'
 import { getFavorites, removeFavorite, type FavoritePlace } from '../api/favorites'
 import { useAuth } from '../contexts/AuthContext'
@@ -98,15 +100,19 @@ export default function Favorites() {
   }
 
   return (
-    <div className="favorites-page">
+    <div className="dashboard favorites-page">
+      <style>{dashboardStyles}</style>
       <Sidebar />
-      <main className="favorites-main">
+      <main className="content favorites-main">
         <header className="favorites-header">
           <div>
+            <span className="eyebrow">YOUR PERSONAL COLLECTION</span>
             <h1>즐겨찾기</h1>
             <p>내가 저장한 운동 장소를 한눈에 확인하세요.</p>
           </div>
         </header>
+
+        <section className="collection-banner"><div><span>PLACES TO COME BACK TO</span><h2>다시 가고 싶은 곳을 모아두세요.</h2><p>좋아하는 운동 장소가 모이면, 나만의 일상이 됩니다.</p><a href="/places">새로운 장소 찾아보기 ↗</a></div><Icon name="star" size={64} /></section>
 
         <section className="favorites-content">
           <div className="favorites-top">
@@ -138,7 +144,7 @@ export default function Favorites() {
 
           {loading && <p className="favorites-message" role="status">즐겨찾기를 불러오는 중…</p>}
           {error && <p className="favorites-message" role="alert">{error} {error.includes('로그인') && <a href="/login">로그인하기</a>}</p>}
-          {!loading && !error && places.length === 0 && <p className="favorites-message">저장한 장소가 없습니다. 주변 운동 장소에서 하트를 눌러 추가해 보세요.</p>}
+          {!loading && !error && places.length === 0 && <div className="favorites-empty"><Icon name="heart" size={36} /><h3>나만의 장소를 하나씩</h3><p>주변 운동 장소에서 하트를 누르면 여기에 모아드려요.</p><a href="/places">주변 장소 둘러보기 ↗</a></div>}
           {!loading && !error && places.length > 0 && filteredPlaces.length === 0 && <p className="favorites-message">검색 결과가 없습니다.</p>}
 
           <div className="favorite-grid">

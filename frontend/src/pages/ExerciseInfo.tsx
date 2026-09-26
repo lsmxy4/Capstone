@@ -12,11 +12,11 @@ import { useLocationData } from '../hooks/useLocationData'
 import { dailyExerciseRecommendation } from '../utils/exerciseRecommendation'
 
 const items: { name: string; icon: IconName; color: string; description: string; tips: string[] }[] = [
-  { name: '러닝', icon: 'run', color: '#675cf3', description: '심폐 지구력과 체력을 키우는 대표적인 유산소 운동입니다.', tips: ['운동 전 5분 이상 가볍게 걷기', '자신의 페이스를 유지하며 호흡하기', '운동 후 충분히 스트레칭하기'] },
-  { name: '걷기', icon: 'walk', color: '#31b779', description: '부담 없이 시작할 수 있는 전신 유산소 운동입니다.', tips: ['시선을 정면으로 유지하기', '팔을 자연스럽게 흔들기', '편한 운동화를 착용하기'] },
-  { name: '자전거', icon: 'bike', color: '#e4a72d', description: '하체 근력과 심폐 기능 향상에 도움을 줍니다.', tips: ['안전모와 보호 장비 착용하기', '출발 전 자전거 상태 확인하기', '안전한 코스를 선택하기'] },
-  { name: '등산', icon: 'mountain', color: '#ef7b45', description: '자연 속에서 하체 근력과 균형 감각을 높입니다.', tips: ['물과 간식을 준비하기', '무리하지 않고 천천히 오르기', '기상 상황을 확인하기'] },
-  { name: '수영', icon: 'swim', color: '#3c9ae8', description: '관절 부담이 적고 전신을 사용하는 운동입니다.', tips: ['준비운동으로 몸을 풀기', '수분을 충분히 섭취하기', '안전요원의 안내 따르기'] },
+  { name: '러닝', icon: 'run', color: '#285440', description: '심폐 지구력과 체력을 키우는 대표적인 유산소 운동입니다.', tips: ['운동 전 5분 이상 가볍게 걷기', '자신의 페이스를 유지하며 호흡하기', '운동 후 충분히 스트레칭하기'] },
+  { name: '걷기', icon: 'walk', color: '#39624a', description: '부담 없이 시작할 수 있는 전신 유산소 운동입니다.', tips: ['시선을 정면으로 유지하기', '팔을 자연스럽게 흔들기', '편한 운동화를 착용하기'] },
+  { name: '자전거', icon: 'bike', color: '#706132', description: '하체 근력과 심폐 기능 향상에 도움을 줍니다.', tips: ['안전모와 보호 장비 착용하기', '출발 전 자전거 상태 확인하기', '안전한 코스를 선택하기'] },
+  { name: '등산', icon: 'mountain', color: '#78513a', description: '자연 속에서 하체 근력과 균형 감각을 높입니다.', tips: ['물과 간식을 준비하기', '무리하지 않고 천천히 오르기', '기상 상황을 확인하기'] },
+  { name: '수영', icon: 'swim', color: '#315c68', description: '관절 부담이 적고 전신을 사용하는 운동입니다.', tips: ['준비운동으로 몸을 풀기', '수분을 충분히 섭취하기', '안전요원의 안내 따르기'] },
 ]
 
 export default function ExerciseInfo() {
@@ -34,8 +34,8 @@ export default function ExerciseInfo() {
   const item = items.find(value => value.name === selected) ?? items[0]
   const recommendation = dailyExerciseRecommendation(selected, conditions.weather.data, conditions.airQuality.data, conditions.uv.data)
   return <><style>{dashboardStyles}</style><div className="dashboard exercise-page dashboard-exercise"><Sidebar /><main className="content" id="top">
-    <header className="welcome"><div><h1>운동 정보</h1><p><Icon name="activity" size={12} /> 운동별 추천 정보와 주의사항을 확인하세요</p></div><div className="header-actions"><a href="/dashboard">대시보드로 돌아가기</a></div></header>
-    <section className="exercise-select panel"><h2>운동 선택</h2><div className="chips">{items.map(value => <button key={value.name} className={value.name === selected ? 'selected' : ''} onClick={() => setSelected(value.name)}><Icon name={value.icon} size={17} />{value.name}</button>)}</div></section>
+    <header className="welcome"><div><span className="eyebrow">MOVE AT YOUR OWN PACE</span><h1>운동 정보</h1><p><Icon name="activity" size={12} /> 운동별 추천 정보와 주의사항을 확인하세요</p></div><div className="header-actions"><a href="/dashboard">대시보드로 돌아가기 ↗</a></div></header>
+    <section className="exercise-select panel"><h2>운동 선택</h2><div className="chips">{items.map(value => <button key={value.name} aria-pressed={value.name === selected} className={value.name === selected ? 'selected' : ''} onClick={() => setSelected(value.name)}><Icon name={value.icon} size={17} />{value.name}</button>)}</div></section>
     <div className="exercise-info-grid"><section className="panel exercise-hero" style={{ '--exercise-color': item.color } as CSSProperties}><div className="exercise-hero-icon"><Icon name={item.icon} size={44} /></div><span className="good">오늘 날씨 반영</span><h2>{item.name}</h2><p>{item.description}</p><div className="exercise-metrics"><div><b>{recommendation.minutes == null ? '—' : `${recommendation.minutes}분`}</b><small>추천 운동 시간</small></div><div><b>{recommendation.intensity}</b><small>운동 강도</small></div><div><b>{recommendation.calories == null ? '—' : `${recommendation.calories} kcal`}</b><small>예상 소모량</small></div></div></section><section className="panel"><div className="title-row"><h2>운동 가이드</h2><span className="level">안전하게 시작하기</span></div><p className="updated">오늘의 {item.name} 체크리스트</p><div className="exercise-tips">{item.tips.map((tip, index) => <div key={tip}><span>{index + 1}</span><p>{tip}</p></div>)}</div></section></div>
     <section className="panel today-exercise-recommendation"><div className="title-row"><h2><span className="title-icon"><Icon name="sun" size={15} /></span>오늘의 {selected} 추천</h2><span className="level">{recommendation.time}</span></div><p>{recommendation.message}</p><div className="condition-summary"><span>기온 <b>{conditions.weather.data?.temperature ?? '—'}°C</b></span><span>강수확률 <b>{conditions.weather.data?.precipitation ?? '—'}%</b></span><span>자외선 <b>{conditions.uv.data ? `${conditions.uv.data.value} (${conditions.uv.data.grade})` : '—'}</b></span><span>미세먼지 PM10 <b>{conditions.airQuality.data?.pm10.value == null ? '—' : `${conditions.airQuality.data.pm10.value}㎍/㎥`} · {conditions.airQuality.data?.pm10.grade ?? '—'}</b></span><span>초미세먼지 PM2.5 <b>{conditions.airQuality.data?.pm25.value == null ? '—' : `${conditions.airQuality.data.pm25.value}㎍/㎥`} · {conditions.airQuality.data?.pm25.grade ?? '—'}</b></span></div></section>
     {conditions.airQuality.data?.warning && <p className="api-message" role="status">{conditions.airQuality.data.warning}</p>}

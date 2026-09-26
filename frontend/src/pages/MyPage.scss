@@ -1,0 +1,55 @@
+.dashboard.mypage {
+  .account-return { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 10px 16px; border: 1px solid #bdcdb0; border-radius: 8px; background: #fcfdf9; color: #285440; font-size: 12px; flex-shrink: 0; }
+  .account-return:hover { background: #dfe8d5; }
+  .account-profile { flex-wrap: wrap; }
+  .back-home { font-size: 12px; color: #285c46; }
+  .account-profile { display: flex; align-items: center; gap: 24px; padding: 32px; margin-bottom: 24px; border: 1px solid #dfe7d6; border-radius: 16px; background: #eaf0e1; }
+  .account-avatar { width: 80px; height: 80px; display: grid; place-items: center; flex-shrink: 0; border-radius: 24px; background: #285440; color: #fff; font-size: 30px; }
+  .account-identity { min-width: 0; flex: 1; }
+  .profile-label { color: #657b55; font-size: 10px; letter-spacing: 2px; }
+  .account-identity h2 { font-size: 24px; margin: 6px 0 8px; overflow-wrap: anywhere; }
+  .account-identity p { color: #607354; font-size: 12px; overflow-wrap: anywhere; }
+  .account-badge { border: 1px solid #ccd9bf; padding: 5px 12px; color: #526f40; border-radius: 20px; font-size: 11px; }
+  .account-primary { border: 0; display: inline-block; background: #285c46; color: #fff; border-radius: 8px; padding: 12px 18px; font-size: 12px; flex-shrink: 0; }
+  .account-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 24px; }
+  .account-stat { display: flex; flex-direction: column; gap: 12px; }
+  .account-stat > .icon { color: #729263; }
+  .account-stat > span { color: #68775e; font-size: 12px; }
+  .account-stat strong { font-size: 34px; font-weight: 600; line-height: 1.4; }
+  .account-stat small { font-size: 13px; font-weight: 400; margin-left: 8px; }
+  .account-stat .recent-date { font-size: 23px; min-height: 48px; display: flex; align-items: center; }
+  .account-stat > span:last-child { font-size: 11px; }
+  a.account-stat:hover { border-color: #8fa77b; background: #fcfdf9; }
+  .saved-preview { margin-bottom: 24px; }
+  .saved-preview .title-row a { font-size: 12px; color: #285c46; }
+  .saved-place, .account-shortcuts > a { display: flex; align-items: center; gap: 14px; padding: 18px 0; border-bottom: 1px solid #edf0e7; }
+  .saved-place:last-child, .account-shortcuts > a:last-child { border: 0; padding-bottom: 0; }
+  .saved-place > div, .account-shortcuts > a > div { flex: 1; min-width: 0; }
+  .saved-place h3, .account-shortcuts h3 { font-size: 13px; overflow-wrap: anywhere; }
+  .saved-place p, .account-shortcuts p { color: #6d7a64; font-size: 11px; margin-top: 5px; overflow-wrap: anywhere; }
+  .saved-icon { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; border-radius: 12px; background: #edf2e5; color: #678257; }
+  .saved-place:hover h3, .account-shortcuts > a:hover h3 { text-decoration: underline; }
+  .account-notice { color: #69735f; font-size: 12px; margin: 12px 0; }
+  .account-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 36px 16px 16px; color: #76896a; }
+  .account-empty h3 { color: #344b32; font-size: 16px; }
+  .account-empty p { color: #69765f; font-size: 12px; }
+  .account-empty a { color: #285c46; font-size: 12px; margin-top: 5px; text-decoration: underline; }
+  .account-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .account-details dl { margin: 15px 0 24px; }
+  .account-details dl > div { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-bottom: 1px solid #edf0e7; font-size: 12px; }
+  .account-details dt { color: #738069; }
+  .account-details dd { margin: 0; overflow-wrap: anywhere; }
+  .account-logout { border: 1px solid #dce3d4; background: #fff; color: #536749; border-radius: 7px; padding: 9px 18px; font-size: 12px; }
+  .account-logout:hover { background: #f0f3e9; }
+  .signup-link { font-size: 12px; color: #285c46; }
+}
+@media (max-width: 700px) {
+  .dashboard.mypage {
+    .account-profile { padding: 24px; gap: 16px; flex-wrap: wrap; }
+    .account-avatar { width: 58px; height: 58px; border-radius: 18px; }
+    .account-identity h2 { font-size: 20px; }
+    .account-identity { flex-basis: calc(100% - 80px); }
+    .account-stats { grid-template-columns: 1fr; gap: 12px; }
+    .account-bottom { grid-template-columns: minmax(0, 1fr); }
+  }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import nearbyPlacesStyles from './NearbyPlaces.scss?inline'
+import dashboardStyles from './Dashboard.scss?inline'
 import Sidebar from '../components/layout/Sidebar'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { getPlaces, getRegion } from '../api/kakao'
@@ -9,19 +10,7 @@ import type { Place } from '../types/place'
 import KakaoMap from '../components/map/KakaoMap'
 import { useAuth } from '../contexts/AuthContext'
 
-/**
- * 주변 운동 장소 페이지
- *
- * - 대시보드(Dashboard.tsx)와 같은 사이드바/레이아웃 톤을 맞추기 위해, 같은 방식으로
- *   아이콘을 인라인 SVG로 그리고 스타일을 `?inline`으로 불러와 <style> 태그로 주입했습니다.
- *   (아직 Sidebar.tsx / Header.tsx 공용 컴포넌트가 비어있어서, Dashboard.tsx가 쓰는 것과
- *   같은 방식으로 이 페이지도 사이드바를 직접 그립니다.)
- * - 지도 영역은 카카오맵 API를 붙이기 전 자리만 잡아둔 자리표시자(placeholder)입니다.
- *   실제 연동 시 `.map-placeholder` 부분을 카카오맵 컴포넌트로 교체하고,
- *   `src/api/kakao.ts`에 지도/장소 검색 로직을 작성하면 됩니다. (이번 작업에선 연결 안 함)
- * - 장소 목록도 아직 더미 데이터입니다. 실제 데이터는 Kakao Local API 연동 후
- *   `src/types/place.ts` 타입에 맞춰 API 응답으로 교체하면 됩니다.
- */
+
 
 type IconName = 'home' | 'pin' | 'activity' | 'map' | 'star' | 'refresh' | 'bell' | 'heart' | 'building' | 'mountain' | 'tree' | 'track' | 'settings' | 'layers'
 
@@ -155,25 +144,28 @@ export default function NearbyPlaces() {
 
   return (
     <>
-      <style>{nearbyPlacesStyles}</style>
-      <div className="dashboard">
+      <style>{dashboardStyles}{nearbyPlacesStyles}</style>
+      <div className="dashboard nearby-page">
         <Sidebar />
 
         <main className="content">
           <header className="welcome">
             <div>
+              <span className="eyebrow">EXPLORE YOUR NEIGHBORHOOD</span>
               <h1>주변 운동 장소</h1>
               <p><Icon name="pin" size={12} /> {address} <span>{location.coordinates ? '• 현재 위치 기준' : ''}</span></p>
             </div>
             <div className="header-actions">
               <button onClick={location.locate} disabled={location.loading}><Icon name="refresh" size={14} /> {location.loading ? '확인 중…' : '새로고침'}</button>
-              <button className="square" aria-label="알림"><Icon name="bell" size={16} /></button>
             </div>
           </header>
 
+          <section className="explore-banner"><div><span>FIND YOUR NEXT MOVE</span><h2>가까운 곳에서 시작하는 좋은 습관.</h2><p>산책로부터 실내 운동 시설까지, 나에게 맞는 장소를 찾아보세요.</p></div><Icon name="map" size={64} /></section>
+
           <div className="places-layout">
             <section className="map-panel panel">
-              {location.coordinates ? <KakaoMap coordinates={location.coordinates} places={displayedPlaces} /> : <div className="map-placeholder"><span className="map-placeholder-icon"><Icon name="map" size={28} /></span><p>현재 위치 확인 중</p><small>위치 권한을 허용하면 주변 운동 장소 지도가 표시됩니다.</small></div>}
+              <div className="title-row"><h2>내 주변 지도</h2><span className="good">반경 10km</span></div>
+              {location.coordinates ? <KakaoMap coordinates={location.coordinates} places={displayedPlaces} /> : <div className="map-placeholder"><span className="map-placeholder-icon"><Icon name="map" size={36} /></span><p>{location.loading ? '현재 위치 확인 중' : '내 주변을 둘러볼 준비가 됐나요?'}</p><small>위치 권한을 허용하면 주변 운동 장소 지도가 표시됩니다.</small></div>}
               <button type="button" className="locate-button" onClick={location.locate} disabled={location.loading}>
                 <Icon name="pin" size={14} /> 현재 위치로 이동
               </button>
@@ -234,7 +226,7 @@ export default function NearbyPlaces() {
                 })}
 
                 {!loading && !weatherPending && !error && displayedPlaces.length === 0 && (
-                  <p className="empty-note">주변에서 해당 운동 장소를 찾지 못했습니다.</p>
+                  <p className="empty-note">{location.coordinates ? '주변에서 해당 운동 장소를 찾지 못했습니다.' : '위치를 연결하면 가까운 장소가 여기에 표시됩니다.'}</p>
                 )}
               </div>
             </section>

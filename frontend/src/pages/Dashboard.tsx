@@ -68,8 +68,9 @@ export default function Dashboard() {
           <header className="welcome">
 
             <div>
+              <span className="eyebrow">YOUR DAILY BALANCE</span>
               <h1>
-                오늘도 건강한 하루 보내세요 👋
+                나의 하루, 나의 움직임
               </h1>
 
               <p>
@@ -111,6 +112,28 @@ export default function Dashboard() {
             </div>
 
           </header>
+
+          <section className="daily-hero" aria-labelledby="daily-heading">
+            <div className="hero-copy">
+              <span className="hero-tag"><span /> EVERY MOVE MATTERS</span>
+              <h2 id="daily-heading">가볍게 나서요.<br />오늘의 좋은 움직임을 위해.</h2>
+              <p>내 주변의 날씨부터 나에게 맞는 운동까지.<br />FitMap과 함께 오늘의 리듬을 찾아보세요.</p>
+              <a href="#exercise">오늘의 운동 고르기 <span aria-hidden="true">↗</span></a>
+            </div>
+            <svg className="hero-art" viewBox="0 0 480 280" fill="none" aria-hidden="true">
+              <circle cx="305" cy="130" r="113" fill="#dbe5cf" />
+              <circle cx="380" cy="61" r="28" fill="#f2c675" />
+              <path d="M40 250C120 164 155 256 255 206S391 132 475 190" stroke="#b5c7a3" strokeWidth="48" />
+              <path d="M40 250C120 164 155 256 255 206S391 132 475 190" stroke="#edf2e6" strokeWidth="2" strokeDasharray="8 10" />
+              <path d="m222 148-36 53-65 10m123-57 31 38-21 53" stroke="#244b3e" strokeWidth="19" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="m245 89-27 52 30 20 23-52" fill="#e7ad65" />
+              <path d="m244 98-39 20-27-20m83 9 20 27 36-7" stroke="#244b3e" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="265" cy="67" r="17" fill="#244b3e" />
+              <path d="m121 211-17 3m151 33 17 2" stroke="#e7ad65" strokeWidth="11" strokeLinecap="round" />
+              <path d="M365 228v-59m0 25c-25 0-29-23-29-23 25 0 29 23 29 23Zm1 15c25 0 29-23 29-23-25 0-29 23-29 23Z" stroke="#6e8c64" strokeWidth="4" />
+              <path d="M146 68h24m-12-12v24M340 108h14m-7-7v14" stroke="#8da481" strokeWidth="2" />
+            </svg>
+          </section>
 
           <p className="location-notice">
             내 위치 사용 시 날씨·대기질·주변 장소 조회를 위해
@@ -307,7 +330,7 @@ export default function Dashboard() {
             >
 
               <h2>
-                운동 선택
+                오늘은 어떤 운동을 할까요?
               </h2>
 
               <div className="chips">
@@ -315,6 +338,7 @@ export default function Dashboard() {
                 {exercises.map(
                   ({ name, icon }) => (
                     <button
+                      aria-pressed={exercise === name}
                       className={
                         exercise === name
                           ? 'selected'
@@ -601,9 +625,14 @@ export default function Dashboard() {
               </p>
 
               {!location.coordinates && (
-                <p className="api-message">
-                  내 위치를 확인하면 주변 장소가 표시됩니다.
-                </p>
+                <div className="places-empty">
+                  <span className="empty-map"><Icon name="map" size={36} /></span>
+                  <h3>다음 운동은 어디에서?</h3>
+                  <p>위치를 연결하면 가까운 운동 장소를 찾아드려요.</p>
+                  <button onClick={location.locate} disabled={location.loading}>
+                    <Icon name="pin" size={15} /> {location.loading ? '위치 확인 중…' : '내 주변 장소 찾기'}
+                  </button>
+                </div>
               )}
 
               {places.loading && (
@@ -701,6 +730,8 @@ export default function Dashboard() {
             </section>
 
           </div>
+
+          <div className="dashboard-footer"><span>FitMap · 매일 조금 더 건강하게</span><span>MAKE YOUR MOVE.</span></div>
 
         </main>
       </div>

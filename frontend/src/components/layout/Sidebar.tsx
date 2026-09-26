@@ -175,6 +175,11 @@ export default function Sidebar() {
           <Icon name="star" />
           즐겨찾기
         </a>
+        <a href="/mypage" className={isActive('/mypage') ? 'active' : ''} aria-current={isActive('/mypage') ? 'page' : undefined}>
+          <Icon name="user" />
+          마이페이지
+        </a>
+        {!loading && !user && <a href="/" className="guest-return"><Icon name="home" />처음 화면으로 돌아가기</a>}
       </nav>
 
       {/* 사용자 영역 */}
