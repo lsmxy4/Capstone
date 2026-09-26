@@ -17,6 +17,8 @@ export function useLocationData(coordinates: Coordinates | null, exercise: strin
   const [places, setPlaces] = useState<Result<Place[]>>(empty)
   const [airQuality, setAirQuality] = useState<Result<AirQuality>>(empty)
   const [uv, setUv] = useState<Result<UvIndex>>(empty)
+  const [retryCount, setRetryCount] = useState(0)
+  const retry = () => setRetryCount(count => count + 1)
   useEffect(() => {
     const controller = new AbortController()
     if (!coordinates) { setWeather(empty()); setRegion(empty()); setAirQuality(empty()); setUv(empty()); return }
@@ -30,7 +32,7 @@ export function useLocationData(coordinates: Coordinates | null, exercise: strin
     void run(getAirQuality(coordinates, controller.signal), setAirQuality)
     void run(getUvIndex(coordinates, controller.signal), setUv)
     return () => controller.abort()
-  }, [coordinates])
+  }, [coordinates, retryCount])
   useEffect(() => {
     const controller = new AbortController()
     if (!coordinates) { setPlaces(empty()); return }
@@ -40,5 +42,5 @@ export function useLocationData(coordinates: Coordinates | null, exercise: strin
     }).catch(error => { if (!controller.signal.aborted) setPlaces({ data: null, loading: false, error: error.message ?? '장소 조회 실패' }) })
     return () => controller.abort()
   }, [coordinates, exercise])
-  return { weather, region, places, airQuality, uv }
+  return { weather, region, places, airQuality, uv, retry }
 }

@@ -5,7 +5,8 @@ import AnimatedNumber from '../components/AnimatedNumber'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { useLocationData } from '../hooks/useLocationData'
 import dashboardStyles from './Dashboard.scss?inline'
-import { dailyExerciseRecommendation } from '../utils/exerciseRecommendation'
+import RecommendationRetry from '../components/RecommendationRetry'
+import { dailyExerciseRecommendation, recommendationStatus } from '../utils/exerciseRecommendation'
 
 const exercises: { name: string; icon: IconName }[] = [
   { name: '러닝', icon: 'run' },
@@ -26,7 +27,8 @@ export default function Dashboard() {
     region,
     places,
     airQuality,
-    uv
+    uv,
+    retry
   } = useLocationData(
     location.coordinates,
     exercise
@@ -43,7 +45,7 @@ export default function Dashboard() {
       exercise,
       weather.data,
       airQuality.data,
-      uv.data
+      uv.data, recommendationStatus(location, weather)
     )
 
   const metric = (
@@ -210,9 +212,7 @@ export default function Dashboard() {
 
               <p className="feels">
                 {weather.data?.condition ??
-                  (weather.loading
-                    ? '날씨 불러오는 중…'
-                    : '날씨 정보 대기 중')}
+                  recommendation.time}
               </p>
 
               {weather.error && (
@@ -552,6 +552,7 @@ export default function Dashboard() {
 
               </div>
 
+              <RecommendationRetry location={location} weather={weather} retry={retry} />
               <div className="caution">
 
                 <b>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Coordinates } from '../types/location'
+import { isUsableLocation, inaccurateLocationMessage } from '../utils/locationAccuracy'
 
 export function useGeolocation() {
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null)
@@ -15,6 +16,11 @@ export function useGeolocation() {
     setCoordinates(null)
     navigator.geolocation.getCurrentPosition(position => {
       if (id !== requestId.current) return
+      if (!isUsableLocation(position.coords)) {
+        setError(inaccurateLocationMessage(position.coords.accuracy))
+        setLoading(false)
+        return
+      }
       setCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude })
       setLoading(false)
     }, failure => {

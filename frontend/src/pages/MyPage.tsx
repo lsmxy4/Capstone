@@ -1,3 +1,4 @@
+import { loginUrl } from '../utils/authNavigation'
 import { useEffect, useState } from 'react'
 import Sidebar from '../components/layout/Sidebar'
 import Icon from '../components/Icon'
@@ -60,7 +61,7 @@ export default function MyPage() {
       <section className="account-profile" aria-busy={loading}>
         <span className="account-avatar">{user ? Array.from(displayName)[0] : <Icon name="user" size={36} />}</span>
         <div className="account-identity"><span className="profile-label">MY FITMAP</span><h2>{loading ? '계정 확인 중…' : error ? '계정을 확인할 수 없어요' : user ? `${displayName}님, 반가워요.` : '나만의 건강한 일상을 시작해요.'}</h2><p>{loading ? '잠시만 기다려 주세요.' : error || (user ? user.email : '로그인하고 저장한 장소와 이동 경로를 한눈에 확인하세요.')}</p></div>
-        {!loading && !error && (user ? <span className="account-badge">내 계정</span> : <a className="account-primary" href="/login">로그인하기 ↗</a>)}
+        {!loading && !error && (user ? <span className="account-badge">내 계정</span> : <a className="account-primary" href={loginUrl(window.location.pathname + window.location.search + window.location.hash)}>로그인하기 ↗</a>)}
         {!loading && error && <button className="account-primary" onClick={() => window.location.reload()}>다시 시도</button>}
         {!loading && !user && <a className="account-return" href="/">← 처음 화면으로</a>}
       </section>

@@ -1,3 +1,4 @@
+import { loginUrl } from '../utils/authNavigation'
 import { useEffect, useMemo, useState } from 'react'
 import './Favorites.scss'
 import dashboardStyles from './Dashboard.scss?inline'
@@ -143,7 +144,7 @@ export default function Favorites() {
           </div>
 
           {loading && <p className="favorites-message" role="status">즐겨찾기를 불러오는 중…</p>}
-          {error && <p className="favorites-message" role="alert">{error} {error.includes('로그인') && <a href="/login">로그인하기</a>}</p>}
+          {error && <p className="favorites-message" role="alert">{error} {error.includes('로그인') && <a href={loginUrl(window.location.pathname + window.location.search + window.location.hash)}>로그인하기</a>}</p>}
           {!loading && !error && places.length === 0 && <div className="favorites-empty"><Icon name="heart" size={36} /><h3>나만의 장소를 하나씩</h3><p>주변 운동 장소에서 하트를 누르면 여기에 모아드려요.</p><a href="/places">주변 장소 둘러보기 ↗</a></div>}
           {!loading && !error && places.length > 0 && filteredPlaces.length === 0 && <p className="favorites-message">검색 결과가 없습니다.</p>}
 

@@ -1,3 +1,4 @@
+import { loginUrl } from '../utils/authNavigation'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import nearbyPlacesStyles from './NearbyPlaces.scss?inline'
 import dashboardStyles from './Dashboard.scss?inline'
@@ -193,7 +194,7 @@ export default function NearbyPlaces() {
 
               {location.error && <p className="empty-note" role="alert">{location.error}</p>}
               {error && <p className="empty-note" role="alert">{error}</p>}
-              {favoriteError && <p className="empty-note" role="alert">{favoriteError} {favoriteError.includes('로그인') && <a href="/login">로그인하기</a>}</p>}
+              {favoriteError && <p className="empty-note" role="alert">{favoriteError} {favoriteError.includes('로그인') && <a href={loginUrl(window.location.pathname + window.location.search + window.location.hash)}>로그인하기</a>}</p>}
               {loading && <p className="empty-note" role="status">주변 장소를 불러오는 중…</p>}
               {weatherPending && !filterTouched.current && <p className="empty-note" role="status">현재 날씨를 확인해 장소 필터를 선택하는 중…</p>}
 

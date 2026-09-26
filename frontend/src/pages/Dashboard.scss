@@ -134,3 +134,16 @@
   .dashboard .daily-hero, .dashboard .panel { animation: dashboard-enter .45s ease-out both; }
   @keyframes dashboard-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 }
+.dashboard .recommendation-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  padding: 9px 13px;
+  border: 1px solid #cbd8bf;
+  border-radius: 8px;
+  background: #edf2e5;
+  color: #285440;
+  font-size: 12px;
+}
+.dashboard .recommendation-retry:hover { background: #dfe8d5; }

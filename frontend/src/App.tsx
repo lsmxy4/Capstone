@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AuthContext, type User } from "./contexts/AuthContext";
 import { getCurrentUser, logout } from "./api/session";
+import { authNavigationUrl, safeReturnTo } from './utils/authNavigation';
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -68,7 +69,11 @@ export default function App() {
   }, []);
 
   const navigate = (nextPage: Page) => {
-    window.history.pushState({}, "", pagePaths[nextPage]);
+    const path = pagePaths[nextPage];
+    const destination = nextPage === 'login' || nextPage === 'signup'
+      ? authNavigationUrl(nextPage === 'login' ? '/login' : '/signup', window.location.search)
+      : path;
+    window.history.pushState({}, "", destination);
     setPage(nextPage);
     window.scrollTo(0, 0);
   };
@@ -78,7 +83,10 @@ export default function App() {
     setLoading(false);
     setError("");
     setUser(loggedInUser);
-    navigate("dashboard");
+    const destination = safeReturnTo(new URLSearchParams(window.location.search).get('returnTo'));
+    window.history.replaceState({}, '', destination);
+    setPage(getInitialPage());
+    window.scrollTo(0, 0);
   };
 
   const handleLogout = async () => {

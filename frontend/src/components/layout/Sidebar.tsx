@@ -1,3 +1,4 @@
+import { loginUrl } from '../../utils/authNavigation'
 import { useEffect, useRef, useState } from 'react'
 import Icon from '../Icon'
 import { useAuth } from '../../contexts/AuthContext'
@@ -204,7 +205,7 @@ export default function Sidebar() {
           }}
         >
           {loggingOut ? '로그아웃 중…' : '로그아웃'}
-        </button> : !loading && <a href="/login" className="logout-button">로그인</a>}
+        </button> : !loading && <a href={loginUrl(window.location.pathname + window.location.search + window.location.hash)} className="logout-button">로그인</a>}
 
       </div>
     </>
