@@ -1,52 +1,56 @@
-# FitMap API 연결
+# FitMap API 연결 안내
 
-## 실행
+전체 실행 방법은 [프로젝트 README](../README.md), 계정·즐겨찾기·경로 API는 [백엔드 README](../backend/README.md)를 참고하세요.
 
-1. `.env.example`을 `.env.local`로 복사합니다.
-2. `KAKAO_REST_API_KEY`에 카카오 앱의 REST API 키를 입력합니다.
-3. `VITE_KAKAO_JAVASCRIPT_KEY`에 같은 카카오 앱의 **JavaScript 키**를 입력하고, 카카오 디벨로퍼스에서 `http://localhost:5173`을 JavaScript SDK 도메인으로 등록합니다.
-4. 카카오 디벨로퍼스의 **카카오맵 > 사용 설정**을 ON으로 설정합니다.
-5. `KMA_SERVICE_KEY`에 공공데이터포털 기상청 단기예보 조회서비스의 **일반 인증키(Decoding)** 를 입력합니다.
-6. `AIRKOREA_SERVICE_KEY`에 공공데이터포털 AirKorea API의 **일반 인증키**를 입력합니다. URL Encoding 형태와 Decoding 형태를 모두 지원합니다.
-7. `npm run dev`를 재시작합니다.
-8. 대시보드에서 브라우저 위치 권한을 허용합니다.
+## 환경 변수
 
-Geolocation은 별도 키가 없습니다. localhost 또는 HTTPS에서 사용합니다.
-위치는 버튼을 누를 때만 요청하며, 좌표는 날씨·주소·주변 장소 조회에 사용합니다.
-위치를 거부하거나 조회에 실패하면 오류를 표시하며, 서울 등의 임의 좌표로 바꾸지 않습니다.
+`frontend/.env.example`을 `.env.local`로 복사하고 값을 입력합니다. 기존 설정 파일이 있으면 덮어쓰지 않습니다.
 
-## 신청할 서비스
+| 변수 | 설정 |
+| --- | --- |
+| `KAKAO_REST_API_KEY` | 카카오 REST API 키. 주소·장소 조회에 사용 |
+| `VITE_KAKAO_JAVASCRIPT_KEY` | 카카오 JavaScript 키. 지도 표시에 사용 |
+| `KMA_SERVICE_KEY` | 기상청 단기예보 조회서비스의 일반 인증키(Decoding) |
+| `AIRKOREA_SERVICE_KEY` | AirKorea 측정소·대기오염 조회서비스 인증키 |
+| `AUTH_API_TARGET` | Spring Boot 주소. 기본 `http://localhost:8080`, Compose에서는 `http://backend:8080` |
 
-- 카카오 [로컬 API](https://developers.kakao.com/docs/latest/ko/local/dev-guide): 좌표→행정구역, 키워드 주변 장소 검색. 앱의 사용 권한·쿼터를 확인하세요. 현재 화면은 검색 결과와 카카오맵 링크를 사용하므로 지도 JavaScript SDK 키는 필요 없습니다.
-- [기상청 단기예보 조회서비스](https://www.data.go.kr/data/15084084/openapi.do): 초단기실황(getUltraSrtNcst)과 단기예보(getVilageFcst). API허브의 authKey와는 다른 인증키입니다.
-- [기상청 생활기상지수 조회서비스(4.0)](https://www.data.go.kr/data/15085288/openapi.do): 현재 행정동의 자외선지수를 조회합니다. `KMA_SERVICE_KEY`를 재사용하지만 별도 활용신청이 필요합니다.
-- 기상청 생활기상지수 요청이 거절되거나 자료가 없으면 [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api)의 현재 자외선지수로 자동 대체합니다.
-- AirKorea [측정소정보 조회서비스](https://www.data.go.kr/data/15073877/openapi.do)와 [대기오염정보 조회서비스](https://www.data.go.kr/data/15073861/openapi.do): 현재 좌표에서 가까운 측정소를 찾고 PM10, PM2.5, 오존의 최신 1시간 측정값을 조회합니다. 두 서비스 모두 활용신청이 필요합니다.
-- [Geolocation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition): 브라우저 위치 조회.
+카카오 앱에 실제 웹 접속 주소(기본 `http://localhost:5173`)를 SDK 도메인으로 등록하고 카카오맵 사용 설정을 확인합니다. 포트나 배포 주소가 달라지면 해당 주소도 확인하세요. 공공데이터포털 키는 해당 서비스 활용 승인이 필요합니다.
 
-## 데이터 의미
+환경 변수를 변경하면 Vite 서버를 재시작합니다. 지도 SDK 키 이외의 키에는 `VITE_` 접두사를 붙이지 마세요. `.env.local`은 커밋하지 않습니다.
 
-- 온도·습도·풍속: 최신 가용 초단기실황 관측값. 화면에 관측 시각(KST)을 표시합니다.
-- 강수확률·강수가 없는 경우 하늘상태: 현재 시간대의 단기예보. 강수 중에는 관측 강수형태를 우선합니다.
-- 발표 지연을 고려하여 실황은 40분, 단기예보는 70분의 여유를 두고 발표 시각을 선택합니다. API에서 아직 자료를 제공하지 않으면 오류를 표시합니다.
-- AirKorea가 응답하면 PM10·PM2.5·오존은 가까운 측정소의 최신 관측값입니다. 일시적인 AirKorea 오류가 지속되면 Open-Meteo 모델의 현재 PM10·PM2.5 추정치를 표시하고 출처를 명시합니다. 이때 오존은 표시하지 않습니다. 자외선은 별도 API에서 조회합니다.
-- 운동 추천 수치는 화면 예시이며 기상청에서 계산한 값이 아닙니다.
-- 주변 장소는 선택 운동에 따른 키워드, 반경 10km, 직선거리 기준입니다. 검색 결과만으로 무료 여부를 판단하지 않습니다.
+## 데이터 흐름
 
-## 구조 및 배포
+| 프런트엔드 API | 데이터 출처·용도 |
+| --- | --- |
+| `/api/fitmap/weather` | 기상청 초단기실황·단기예보 |
+| `/api/fitmap/region` | 카카오 좌표 → 주소 |
+| `/api/fitmap/places` | 카카오 주변 장소 검색 |
+| `/api/fitmap/air-quality` | AirKorea, 실패 시 Open-Meteo 추정치 |
+| `/api/fitmap/uv` | Open-Meteo 자외선지수 |
+| `/api/auth/*` | Spring Boot의 인증·즐겨찾기·경로 API |
 
-브라우저 → `/api/fitmap/weather`, `/region`, `/places` → 서버 → 기상청/카카오
+위치 자체는 브라우저 Geolocation API에서 받습니다. API 키가 필요하지 않으며, 관련 페이지 진입 시 자동 요청하고 버튼으로 재조회합니다. 별도 IP 위치 서비스는 연결되어 있지 않습니다. 위치 권한을 거부하면 임의 좌표로 대체하지 않습니다.
 
-키는 서버 코드에서만 읽습니다. `VITE_` 접두사를 붙이지 마세요. `.env.local`은 Git 제외 대상입니다.
-현재 서버는 Vite 개발/preview 미들웨어입니다. **정적 dist 파일만 배포하면 API가 동작하지 않습니다.**
-운영 시 팀 백엔드에 `server/api.ts`의 요청·정규화 로직을 옮겨 같은 경로를 제공하고, 사용자 인증·요청 제한을 추가하세요.
-클라이언트 요청 취소와 서버 외부 호출 시간 제한을 적용했습니다. 외부 API 오류 원문이나 인증키는 브라우저 응답에 포함하지 않습니다.
+일반 페이지는 오차가 큰 유효 좌표도 API 조회에 사용합니다. 주변 장소 페이지는 오차 100m 초과 시 표시를 막습니다. 운동 경로 측정·저장도 오차 100m 이내의 위치만 사용합니다. 자세한 기준은 루트 README의 위치 처리 항목을 참고하세요.
 
-## 확인
+## 데이터 해석
 
-```sh
-node --experimental-strip-types --test server/api.test.ts
-npm run build
+- 온도·습도·풍속은 최신 가용 초단기실황이며 관측 시각은 KST로 표시합니다.
+- 강수확률과 강수가 없는 경우의 하늘 상태는 단기예보를 사용합니다. 강수 중에는 관측 강수형태를 우선합니다.
+- AirKorea 자료는 가까운 측정소의 관측값입니다. Open-Meteo로 대체하면 출처·안내와 함께 PM10·PM2.5 추정치를 표시하고 오존은 표시하지 않습니다.
+- 자외선은 현재 구현에서 Open-Meteo를 직접 사용합니다. 기상청 생활기상지수 API는 호출하지 않습니다.
+- 장소는 운동별 키워드, 반경 10km, 직선거리 기준입니다. 실제 이동 거리나 무료 이용 여부를 보장하지 않습니다.
+- 운동 추천 시간·강도·칼로리는 앱 내부 규칙으로 계산합니다.
+
+## 배포와 확인
+
+외부 API 중계는 `server/api.ts`의 Vite 개발·preview 미들웨어입니다. 정적 `dist`만 배포하면 동작하지 않습니다. 운영 서버에는 동일한 `/api/fitmap/*` 경로와 Spring Boot의 `/api/auth/*` 연결을 구성해야 합니다.
+
+프로젝트 루트에서:
+
+```powershell
+npm --prefix frontend run build
+node --test --test-isolation=none frontend/server/*.test.ts
 ```
 
-테스트는 합성 응답을 사용하며 실서비스 키 유효성·활용 승인까지 검증하지 않습니다.
+Node.js 22.18 이상(22.x)을 기준으로 합니다. 테스트는 합성 응답을 사용하므로 실제 키의 유효성·서비스 활용 승인·기기 위치 정확도까지 검증하지 않습니다.
