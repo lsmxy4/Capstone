@@ -1,10 +1,10 @@
 export const MAX_LOCATION_ACCURACY_METERS = 100
 
-export function isUsableLocation(coords: { latitude: number; longitude: number; accuracy: number }) {
+export function isUsableLocation(coords: { latitude: number; longitude: number; accuracy: number }, maxAccuracy = MAX_LOCATION_ACCURACY_METERS) {
   return Number.isFinite(coords.latitude) && Math.abs(coords.latitude) <= 90
     && Number.isFinite(coords.longitude) && Math.abs(coords.longitude) <= 180
     && Number.isFinite(coords.accuracy) && coords.accuracy >= 0
-    && coords.accuracy <= MAX_LOCATION_ACCURACY_METERS
+    && coords.accuracy <= maxAccuracy
 }
 
 export function inaccurateLocationMessage(accuracy: number) {

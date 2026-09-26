@@ -47,7 +47,7 @@ function placeType(place: Place): Exclude<Filter, '전체'> {
 
 export default function NearbyPlaces() {
   const { user, loading: authLoading } = useAuth()
-  const location = useGeolocation()
+  const location = useGeolocation(true)
   const [filter, setFilter] = useState<Filter>('전체')
   const [weatherPending, setWeatherPending] = useState(false)
   const filterTouched = useRef(false)
@@ -112,7 +112,7 @@ export default function NearbyPlaces() {
   }, [location.coordinates])
 
   const filteredPlaces = filter === '전체' ? places : places.filter(place => placeType(place) === filter)
-  const displayedPlaces = weatherPending && !filterTouched.current ? [] : filteredPlaces
+  const displayedPlaces = !location.coordinates || (weatherPending && !filterTouched.current) ? [] : filteredPlaces
 
   const toggleFavorite = async (place: Place) => {
     if (authLoading || !user) {
@@ -154,7 +154,7 @@ export default function NearbyPlaces() {
             <div>
               <span className="eyebrow">EXPLORE YOUR NEIGHBORHOOD</span>
               <h1>주변 운동 장소</h1>
-              <p><Icon name="pin" size={12} /> {address} <span>{location.coordinates ? '• 현재 위치 기준' : ''}</span></p>
+              <p><Icon name="pin" size={12} /> {location.coordinates ? address : location.loading ? '현재 위치 확인 중' : '정확한 위치 확인 필요'} <span>{location.coordinates ? '• 현재 위치 기준' : ''}</span></p>
             </div>
             <div className="header-actions">
               <button onClick={location.locate} disabled={location.loading}><Icon name="refresh" size={14} /> {location.loading ? '확인 중…' : '새로고침'}</button>
