@@ -18,7 +18,7 @@ test('poor accuracy message reports uncertainty rather than claiming a real posi
   assert.match(inaccurateLocationMessage(3000), /현재 위치를 표시하지 않습니다/)
 })
 
-test('general pages accept coarse coordinates while nearby places reject them', () => {
+test('general pages and nearby places accept coarse coordinates while route tracking rejects them', () => {
   const approximate = { latitude: 37, longitude: 127, accuracy: 3000 }
   assert.equal(isUsableLocation(approximate, Infinity), true)
   assert.equal(isUsableLocation(approximate, 100), false)

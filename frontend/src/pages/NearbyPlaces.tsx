@@ -47,7 +47,7 @@ function placeType(place: Place): Exclude<Filter, '전체'> {
 
 export default function NearbyPlaces() {
   const { user, loading: authLoading } = useAuth()
-  const location = useGeolocation(true)
+  const location = useGeolocation()
   const [filter, setFilter] = useState<Filter>('전체')
   const [weatherPending, setWeatherPending] = useState(false)
   const filterTouched = useRef(false)
