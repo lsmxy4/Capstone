@@ -42,6 +42,28 @@ test('invalid coordinates and missing keys fail clearly without upstream calls',
   assert.equal((await call('/api/fitmap/unknown?lat=37.5&lon=127')).status, 404)
 })
 
+test('weather combines AWS observations with forecasts and works when forecasts are unavailable', async () => {
+  const original = globalThis.fetch
+  globalThis.fetch = (async input => {
+    const url = new URL(String(input))
+    assert.equal(url.hostname, 'apihub.kma.go.kr')
+    if (url.pathname.endsWith('stn_inf.php')) return new Response('101 127 37')
+    const stamp = new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 16).replace(/[-T:]/g, '')
+    return new Response(`${stamp} 101 90 2.5 90 3 90 2 21 1 0 0 0 0 70 1000 1000 10`)
+  }) as typeof fetch
+  try {
+    const result = await call('/api/fitmap/weather?lat=37&lon=127', { KMA_API_HUB_KEY: 'test-only' })
+    assert.equal(result.status, 200)
+    assert.equal(result.data.source, 'KMA AWS')
+    assert.equal(result.data.temperature, 21)
+    assert.equal(result.data.humidity, 70)
+    assert.equal(result.data.condition, '강수 관측')
+    assert.equal(result.data.precipitation, null)
+    assert.match(result.data.warning, /예보/)
+    assert.match(result.data.observedAt, /^\d{8} \d{4}$/)
+  } finally { globalThis.fetch = original }
+})
+
 test('AirKorea flow finds a nearby station and normalizes measurements', async () => {
   const original = globalThis.fetch
   globalThis.fetch = (async input => {

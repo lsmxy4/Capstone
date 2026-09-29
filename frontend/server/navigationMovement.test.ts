@@ -21,6 +21,14 @@ test('stationary jitter, poor accuracy and large GPS jumps are rejected', () => 
   assert.equal(acceptedMovementMeters(pointAt(0), pointAt(2000), 5), 0)
   assert.ok(acceptedMovementMeters(pointAt(0), pointAt(6), 5) > 5)
 })
+test('accuracy above 100m allows movement and cannot raise the minimum step beyond 50m', () => {
+  for (const accuracy of [101, 150, 3000]) {
+    assert.ok(acceptedMovementMeters(pointAt(0), pointAt(60), accuracy) > 59)
+  }
+  for (const accuracy of [NaN, Infinity, -1]) {
+    assert.equal(acceptedMovementMeters(pointAt(0), pointAt(60), accuracy), 0)
+  }
+})
 test('login keeps original page and hash through signup and back', () => {
   for (const destination of ['/favorites', '/mypage', '/places', '/exercise', '/dashboard#weather']) {
     const search = loginUrl(destination).slice('/login'.length)

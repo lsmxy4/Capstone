@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { isUsableLocation, inaccurateLocationMessage } from '../src/utils/locationAccuracy.ts'
 
-test('coarse browser locations are rejected before displaying or saving a pin', () => {
+test('explicit strict accuracy policy rejects coarse browser locations', () => {
   for (const accuracy of [101, 3000, Infinity, NaN, -1]) {
     assert.equal(isUsableLocation({ latitude: 37, longitude: 127, accuracy }), false)
   }
@@ -18,7 +18,7 @@ test('poor accuracy message reports uncertainty rather than claiming a real posi
   assert.match(inaccurateLocationMessage(3000), /현재 위치를 표시하지 않습니다/)
 })
 
-test('general pages and nearby places accept coarse coordinates while route tracking rejects them', () => {
+test('unlimited accuracy policy accepts coarse coordinates while strict policy rejects them', () => {
   const approximate = { latitude: 37, longitude: 127, accuracy: 3000 }
   assert.equal(isUsableLocation(approximate, Infinity), true)
   assert.equal(isUsableLocation(approximate, 100), false)

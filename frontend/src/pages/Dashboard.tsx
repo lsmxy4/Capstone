@@ -223,7 +223,7 @@ export default function Dashboard() {
 
               {weather.data && (
                 <p className="weather-source">
-                  기상청 ·{' '}
+                  기상청 AWS {weather.data.stationId && `관측소 ${weather.data.stationId} (${weather.data.stationDistanceKm}km)`} ·{' '}
                   {weather.data.observedAt.slice(0, 4)}
                   -
                   {weather.data.observedAt.slice(4, 6)}
@@ -231,7 +231,7 @@ export default function Dashboard() {
                   {weather.data.observedAt.slice(6, 8)}
                   {' '}
                   {weather.data.observedAt.slice(9, 11)}
-                  :00 관측 (KST)
+                  :{weather.data.observedAt.slice(11, 13)} 관측 (KST) · 10분마다 자동 갱신
                 </p>
               )}
 

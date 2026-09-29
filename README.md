@@ -21,7 +21,7 @@
 - **프런트엔드:** React 19, TypeScript, Vite 8, SCSS
 - **백엔드:** Java 21, Spring Boot, JDBC, H2
 - **지도·장소·주소:** Kakao Maps JavaScript SDK, Kakao Local API
-- **날씨:** 기상청 초단기실황·단기예보
+- **날씨:** 기상청 API허브 AWS 매분관측·단기예보
 - **대기질:** AirKorea, 조회 실패 시 Open-Meteo 추정치로 대체
 - **자외선:** Open-Meteo
 - **위치:** 브라우저 Geolocation API
@@ -49,7 +49,8 @@ Copy-Item frontend/.env.example frontend/.env.local
 | --- | --- |
 | `KAKAO_REST_API_KEY` | 주소 조회·주변 장소 검색 |
 | `VITE_KAKAO_JAVASCRIPT_KEY` | 브라우저 지도 SDK |
-| `KMA_SERVICE_KEY` | 기상청 초단기실황·단기예보 |
+| `KMA_SERVICE_KEY` | 기상청 단기예보 |
+| `KMA_API_HUB_KEY` | 기상청 API허브 AWS 매분자료·지상관측 지점정보 |
 | `AIRKOREA_SERVICE_KEY` | AirKorea 측정소·대기질 |
 | `AUTH_API_TARGET` | 인증 서버 주소. 직접 실행 시 기본 `http://localhost:8080` |
 
@@ -69,6 +70,17 @@ docker compose up -d --build
 - 종료: `docker compose down`
 
 H2 데이터는 `auth-data` 볼륨에 보존됩니다. 현재 Compose는 Vite 개발 서버를 실행하는 개발용 구성입니다.
+
+### 배포용 실행
+
+루트 `.env`에 도메인과 인증키를 설정한 뒤 실행합니다.
+
+```sh
+docker compose --env-file .env -f docker-compose.prod.yml up -d --build
+```
+
+배포 구성은 빌드된 프런트엔드, Node API 서버, Spring Boot와 HTTPS 프록시를 실행합니다.
+도메인·환경변수·데이터 보존 설정은 [배포 안내](deploy/README.md)를 참고하세요.
 
 ### 2-B. 직접 실행
 
@@ -99,10 +111,10 @@ Vite가 출력하는 주소로 접속합니다. 5173 포트가 사용 중이면 
 | --- | --- |
 | 대시보드·운동 추천의 환경 정보 | 유효한 좌표이면 보고된 위치 오차가 커도 해당 좌표로 날씨·대기질 API 조회 |
 | 주변 장소 페이지 | 위치 오차 크기에 관계없이 유효한 좌표로 지도와 장소 목록 표시 |
-| 운동 정보의 이동 거리·경로 기록 | 오차 **100m 이내**인 위치만 측정·저장 대상으로 사용 |
+| 운동 정보의 이동 거리·경로 기록 | 위치 오차 크기에 관계없이 유효한 좌표를 사용하며 이동량 필터 적용 |
 
 - 정확도는 기기가 보고한 추정 오차이며 실제 위치 일치를 보장하지 않습니다. 대시보드의 주변 장소 요약은 일반 위치 조회 기준을 따릅니다.
-- 이동 거리는 마지막으로 인정한 위치부터 계산합니다. 최소 이동 기준은 `max(5m, 위치 오차 × 0.5)`이고, 1km 이상의 단일 이동은 제외합니다.
+- 이동 거리는 마지막으로 인정한 위치부터 계산합니다. 최소 이동 기준은 `max(5m, min(50m, 위치 오차 × 0.5))`이고, 1km 이상의 단일 이동은 제외합니다.
 - 운동 정보 화면을 연 동안 이동을 측정합니다. 화면을 나갔다 다시 들어오면 화면의 거리 누적은 초기화되며, 로그인한 사용자의 저장 경로는 한국 시간 날짜별로 조회할 수 있습니다.
 - 45초 동안 정밀 신호를 기다리는 별도 기능은 사용하지 않습니다. 일반 위치 조회 제한 시간은 20초입니다.
 - 위치 기능에는 브라우저 권한이 필요합니다. 휴대폰에서 일반 HTTP 내부 IP 주소로 접속하면 제한될 수 있으므로 HTTPS를 사용하세요. 로컬 개발은 `localhost`를 사용합니다.

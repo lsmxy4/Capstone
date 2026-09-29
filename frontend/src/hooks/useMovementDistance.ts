@@ -23,7 +23,7 @@ export function useMovementDistance(enabled: boolean) {
       const next = { latitude: position.coords.latitude, longitude: position.coords.longitude }
       setAccuracyMeters(position.coords.accuracy)
       setError(null)
-      if (!isUsableLocation(position.coords)) {
+      if (!isUsableLocation(position.coords, Infinity)) {
         setError(inaccurateLocationMessage(position.coords.accuracy))
         return
       }

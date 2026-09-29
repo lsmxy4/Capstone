@@ -11,7 +11,8 @@ import { getUvIndex } from '../api/uv'
 
 type Result<T> = { data: T | null; loading: boolean; error: string | null }
 const empty = <T,>(): Result<T> => ({ data: null, loading: false, error: null })
-export function useLocationData(coordinates: Coordinates | null, exercise: string) {
+const WEATHER_REFRESH_INTERVAL = 10 * 60 * 1000
+export function useLocationData(coordinates: Coordinates | null, exercise: string | null) {
   const [weather, setWeather] = useState<Result<Weather>>(empty)
   const [region, setRegion] = useState<Result<{ address: string }>>(empty)
   const [places, setPlaces] = useState<Result<Place[]>>(empty)
@@ -20,14 +21,41 @@ export function useLocationData(coordinates: Coordinates | null, exercise: strin
   const [retryCount, setRetryCount] = useState(0)
   const retry = () => setRetryCount(count => count + 1)
   useEffect(() => {
+    if (!coordinates) { setWeather(empty()); return }
     const controller = new AbortController()
-    if (!coordinates) { setWeather(empty()); setRegion(empty()); setAirQuality(empty()); setUv(empty()); return }
+    let pending = false
+    setWeather({ data: null, loading: true, error: null })
+    const refreshWeather = async () => {
+      if (pending) return
+      pending = true
+      try {
+        const data = await getWeather(coordinates, controller.signal)
+        if (!controller.signal.aborted) setWeather({ data, loading: false, error: null })
+      } catch (error) {
+        if (!controller.signal.aborted) setWeather(current => ({
+          ...current,
+          loading: false,
+          error: error instanceof Error ? error.message : '날씨 조회 실패',
+        }))
+      } finally {
+        pending = false
+      }
+    }
+    void refreshWeather()
+    const timer = window.setInterval(() => { void refreshWeather() }, WEATHER_REFRESH_INTERVAL)
+    return () => {
+      window.clearInterval(timer)
+      controller.abort()
+    }
+  }, [coordinates, retryCount])
+  useEffect(() => {
+    const controller = new AbortController()
+    if (!coordinates) { setRegion(empty()); setAirQuality(empty()); setUv(empty()); return }
     const run = async <T,>(request: Promise<T>, set: (result: Result<T>) => void) => {
       set({ data: null, loading: true, error: null })
       try { const data = await request; if (!controller.signal.aborted) set({ data, loading: false, error: null }) }
       catch (error) { if (!controller.signal.aborted) set({ data: null, loading: false, error: error instanceof Error ? error.message : '조회 실패' }) }
     }
-    void run(getWeather(coordinates, controller.signal), setWeather)
     void run(getRegion(coordinates, controller.signal), setRegion)
     void run(getAirQuality(coordinates, controller.signal), setAirQuality)
     void run(getUvIndex(coordinates, controller.signal), setUv)
@@ -35,7 +63,7 @@ export function useLocationData(coordinates: Coordinates | null, exercise: strin
   }, [coordinates, retryCount])
   useEffect(() => {
     const controller = new AbortController()
-    if (!coordinates) { setPlaces(empty()); return }
+    if (!coordinates || !exercise) { setPlaces(empty()); return }
     setPlaces({ data: null, loading: true, error: null })
     getPlaces(coordinates, exercise, controller.signal, 3).then(data => {
       if (!controller.signal.aborted) setPlaces({ data, loading: false, error: null })

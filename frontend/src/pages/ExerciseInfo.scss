@@ -38,6 +38,17 @@
 @media (max-width: 760px) { .dashboard.dashboard-exercise .exercise-info-grid { grid-template-columns: 1fr; } .dashboard.dashboard-exercise .condition-summary { grid-template-columns: repeat(2, 1fr); } }
 
 .dashboard.dashboard-exercise {
+  .weather-exercise-picks { margin-bottom: 16px; padding: 22px; }
+  .weather-exercise-picks > p { margin: 12px 0; color: #536749; line-height: 1.7; }
+  .weather-exercise-picks > small { display: block; margin-top: 12px; color: #65745e; }
+  .weather-pick-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .weather-pick { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 18px; border: 1px solid #dce3d4; border-radius: 12px; background: #f5f7ef; color: #285440; font: inherit; text-align: left; }
+  .weather-pick { cursor: pointer; }
+  .weather-pick[aria-pressed='true'] { border-color: #285440; background: #e6efdd; }
+  .weather-pick:hover { background: #e6efdd; }
+  .weather-pick:focus-visible { outline: 2px solid #285440; outline-offset: 3px; }
+
+  .weather-pick-list small { flex-basis: 100%; font-size: 12px; }
   .exercise-hero h2 { color: #fff; font-size: 30px; }
   .exercise-hero p, .exercise-metrics b, .exercise-metrics small { color: #fff; opacity: 1; }
   .exercise-hero p { line-height: 1.8; }
