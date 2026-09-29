@@ -1,8 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { baseTime, parseWeather, toGrid, type WeatherItem } from './weather.ts'
+import { createAwsLoader } from './aws.ts'
 
-type Config = { KAKAO_REST_API_KEY?: string; KMA_SERVICE_KEY?: string; AIRKOREA_SERVICE_KEY?: string }
+type Config = { KAKAO_REST_API_KEY?: string; KMA_SERVICE_KEY?: string; KMA_API_HUB_KEY?: string; AIRKOREA_SERVICE_KEY?: string }
 type Next = () => void
 class ApiError extends Error {
   status: number
@@ -161,6 +162,7 @@ async function resilientAirQuality(config: Config, lat: number, lon: number) {
 }
 
 export function createApiHandler(config: Config) {
+  const loadAws = createAwsLoader(config.KMA_API_HUB_KEY ?? '')
   const airCache = new Map<string, { expiresAt: number; value: Awaited<ReturnType<typeof resilientAirQuality>> }>()
   return async (req: IncomingMessage, res: ServerResponse, next: Next) => {
     const request = new URL(req.url ?? '/', 'http://localhost')
@@ -176,9 +178,12 @@ export function createApiHandler(config: Config) {
       if (!request.searchParams.get('lat') || !request.searchParams.get('lon') || !Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) throw new ApiError(400, '유효한 위치 좌표가 필요합니다.')
       let result: unknown
       if (route === 'weather') {
-        const [observation, forecast] = await Promise.allSettled([kma(config, lat, lon, 'observation'), kma(config, lat, lon, 'forecast')])
-        if (observation.status === 'rejected') throw observation.reason
-        result = { ...parseWeather(observation.value.items, forecast.status === 'fulfilled' ? forecast.value.items : []), observedAt: `${observation.value.base.date} ${observation.value.base.time}`, warning: forecast.status === 'rejected' ? '강수확률과 하늘상태 예보를 불러오지 못했습니다.' : null }
+        if (!config.KMA_API_HUB_KEY) throw new ApiError(503, 'AWS 관측용 KMA_API_HUB_KEY가 설정되지 않았습니다. 기상청 API허브 인증키를 설정해 주세요.')
+        const [observation, forecast] = await Promise.allSettled([loadAws(lat, lon), kma(config, lat, lon, 'forecast')])
+        if (observation.status === 'rejected') throw new ApiError(502, observation.reason instanceof Error && !/fetch|timeout|abort/i.test(observation.reason.message) ? observation.reason.message : 'AWS 관측자료 연결이 지연되거나 실패했습니다.')
+        const { raining, ...observed } = observation.value
+        const prediction = parseWeather([], forecast.status === 'fulfilled' ? forecast.value.items : [])
+        result = { ...prediction, ...observed, source: 'KMA AWS', condition: raining === 1 ? '강수 관측' : prediction.condition, warning: forecast.status === 'rejected' ? '강수확률과 하늘상태 예보를 불러오지 못했습니다.' : null }
       } else if (route === 'air-quality') {
         const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)}`
         const cached = airCache.get(cacheKey)

@@ -12,6 +12,24 @@ const defaults: Record<string, { minutes: number; kcalPerMinute: number }> = {
 
 export type RecommendationStatus = 'location-loading' | 'location-error' | 'location-required' | 'weather-loading' | 'weather-error' | 'weather-idle'
 
+export function weatherExerciseSuggestions(weather: Weather | null, air: AirQuality | null, uv: UvIndex | null) {
+  if (!weather) return null
+  const reasons: string[] = []
+  if (/비|눈|소나기|강수/.test(weather.condition) || (weather.precipitation ?? 0) >= 60) reasons.push('비·눈이 관측되거나 강수확률이 높아요.')
+  if ((weather.wind ?? 0) >= 8) reasons.push('바람이 강하게 불고 있어요.')
+  if (weather.temperature != null && (weather.temperature <= 0 || weather.temperature >= 33)) reasons.push('기온을 고려하면 실내 운동이 더 적합해요.')
+  if ([air?.pm10.grade, air?.pm25.grade].some(grade => grade?.includes('나쁨'))) reasons.push('미세먼지가 나빠요.')
+  if ((uv?.value ?? 0) >= 6) reasons.push('자외선이 강해요.')
+  if (reasons.length) return { exercises: ['수영'], indoor: true, reason: `${reasons.join(' ')} 실내 수영장을 추천해요.` }
+  if (weather.temperature == null || weather.wind == null || weather.precipitation == null || weather.condition === '하늘상태 미제공') {
+    return { exercises: ['수영'], indoor: true, reason: '일부 날씨 정보가 없어 야외 운동 적합성을 판단하기 어려워요. 실내 수영을 우선 제안해요.' }
+  }
+  if (weather.temperature < 5 || weather.temperature >= 27) {
+    return { exercises: ['걷기', '수영'], indoor: false, reason: '춥거나 더운 기온을 고려해 가벼운 걷기 또는 실내 수영을 추천해요.' }
+  }
+  return { exercises: ['걷기', '러닝', '자전거'], indoor: false, reason: '현재 기온·바람·강수 정보를 기준으로 야외 운동을 추천해요.' }
+}
+
 export function recommendationStatus(location: { loading: boolean; error: string | null; coordinates: unknown }, weather: { loading: boolean; error: string | null }): RecommendationStatus {
   if (location.loading) return 'location-loading'
   if (location.error) return 'location-error'
@@ -41,7 +59,7 @@ export function dailyExerciseRecommendation(exercise: string, weather: Weather |
   const reasons: string[] = []
   const outdoor = exercise !== '수영'
   const badAir = [air?.pm10.grade, air?.pm25.grade].some(grade => grade?.includes('나쁨'))
-  const rainy = (weather.precipitation ?? 0) >= 60 || /비|눈|소나기/.test(weather.condition)
+  const rainy = (weather.precipitation ?? 0) >= 60 || /비|눈|소나기|강수/.test(weather.condition)
   const preferIndoor = outdoor && (rainy || badAir)
 
   if (weather.temperature != null && (weather.temperature <= 0 || weather.temperature >= 33)) {

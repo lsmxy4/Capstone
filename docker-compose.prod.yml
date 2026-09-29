@@ -1,0 +1,58 @@
+name: capstone-prod
+services:
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Set SITE_ADDRESS in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.prod
+      target: web
+      args:
+        VITE_KAKAO_JAVASCRIPT_KEY: ${VITE_KAKAO_JAVASCRIPT_KEY:?Set Kakao JavaScript key}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+      backend:
+        condition: service_started
+  api:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.prod
+      target: api
+    restart: unless-stopped
+    environment:
+      AUTH_API_TARGET: http://backend:8080
+      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:?Set Kakao REST key}
+      KMA_SERVICE_KEY: ${KMA_SERVICE_KEY:?Set KMA forecast key}
+      KMA_API_HUB_KEY: ${KMA_API_HUB_KEY:?Set KMA API Hub key}
+      AIRKOREA_SERVICE_KEY: ${AIRKOREA_SERVICE_KEY:?Set AirKorea key}
+    depends_on:
+      - backend
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      FRONTEND_URL: ${FRONTEND_URL:?Set public frontend URL}
+      DB_PASSWORD: ${DB_PASSWORD:?Set database password}
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+    volumes:
+      - auth-data:/app/data
+volumes:
+  auth-data:
+  caddy-data:
+  caddy-config:
