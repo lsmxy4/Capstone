@@ -11,61 +11,494 @@ import { MovementRouteMap } from '../components/map/KakaoMap'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { useLocationData } from '../hooks/useLocationData'
 import RecommendationRetry from '../components/RecommendationRetry'
-import { dailyExerciseRecommendation, recommendationStatus, weatherExerciseSuggestions } from '../utils/exerciseRecommendation'
+import {
+  dailyExerciseRecommendation,
+  recommendationStatus,
+  weatherExerciseSuggestions,
+} from '../utils/exerciseRecommendation'
 
-const items: { name: string; icon: IconName; color: string; description: string; tips: string[] }[] = [
-  { name: '러닝', icon: 'run', color: '#285440', description: '심폐 지구력과 체력을 키우는 대표적인 유산소 운동입니다.', tips: ['운동 전 5분 이상 가볍게 걷기', '자신의 페이스를 유지하며 호흡하기', '운동 후 충분히 스트레칭하기'] },
-  { name: '걷기', icon: 'walk', color: '#39624a', description: '부담 없이 시작할 수 있는 전신 유산소 운동입니다.', tips: ['시선을 정면으로 유지하기', '팔을 자연스럽게 흔들기', '편한 운동화를 착용하기'] },
-  { name: '자전거', icon: 'bike', color: '#706132', description: '하체 근력과 심폐 기능 향상에 도움을 줍니다.', tips: ['안전모와 보호 장비 착용하기', '출발 전 자전거 상태 확인하기', '안전한 코스를 선택하기'] },
-  { name: '등산', icon: 'mountain', color: '#78513a', description: '자연 속에서 하체 근력과 균형 감각을 높입니다.', tips: ['물과 간식을 준비하기', '무리하지 않고 천천히 오르기', '기상 상황을 확인하기'] },
-  { name: '수영', icon: 'swim', color: '#315c68', description: '관절 부담이 적고 전신을 사용하는 운동입니다.', tips: ['준비운동으로 몸을 풀기', '수분을 충분히 섭취하기', '안전요원의 안내 따르기'] },
+const items: {
+  name: string
+  icon: IconName
+  color: string
+  description: string
+  tips: string[]
+}[] = [
+  {
+    name: '러닝',
+    icon: 'run',
+    color: '#285440',
+    description: '심폐 지구력과 체력을 키우는 대표적인 유산소 운동입니다.',
+    tips: [
+      '운동 전 5분 이상 가볍게 걷기',
+      '자신의 페이스를 유지하며 호흡하기',
+      '운동 후 충분히 스트레칭하기',
+    ],
+  },
+  {
+    name: '걷기',
+    icon: 'walk',
+    color: '#39624a',
+    description: '부담 없이 시작할 수 있는 전신 유산소 운동입니다.',
+    tips: [
+      '시선을 정면으로 유지하기',
+      '팔을 자연스럽게 흔들기',
+      '편한 운동화를 착용하기',
+    ],
+  },
+  {
+    name: '자전거',
+    icon: 'bike',
+    color: '#706132',
+    description: '하체 근력과 심폐 기능 향상에 도움을 줍니다.',
+    tips: [
+      '안전모와 보호 장비 착용하기',
+      '출발 전 자전거 상태 확인하기',
+      '안전한 코스를 선택하기',
+    ],
+  },
+  {
+    name: '등산',
+    icon: 'mountain',
+    color: '#78513a',
+    description: '자연 속에서 하체 근력과 균형 감각을 높입니다.',
+    tips: [
+      '물과 간식을 준비하기',
+      '무리하지 않고 천천히 오르기',
+      '기상 상황을 확인하기',
+    ],
+  },
+  {
+    name: '수영',
+    icon: 'swim',
+    color: '#315c68',
+    description: '관절 부담이 적고 전신을 사용하는 운동입니다.',
+    tips: [
+      '준비운동으로 몸을 풀기',
+      '수분을 충분히 섭취하기',
+      '안전요원의 안내 따르기',
+    ],
+  },
 ]
 
 export default function ExerciseInfo() {
   const [chosenExercise, setChosenExercise] = useState('')
+
   const location = useGeolocation()
   const conditions = useLocationData(location.coordinates, null)
+
   const movement = useMovementDistance(true)
   const dailyRoute = useDailyRoute(movement.latestPoint)
+
   const todaySelected = dailyRoute.selectedDate === dailyRoute.today
-  const routePoints = useMemo(() => !todaySelected ? dailyRoute.points
-    : dailyRoute.auth === 'ready' && dailyRoute.points.length ? dailyRoute.points
-    : movement.points.length ? movement.points
-    : location.coordinates ? [location.coordinates] : [],
-  [todaySelected, dailyRoute.auth, dailyRoute.points, movement.points, location.coordinates])
-  const suggestions = conditions.weather.error ? null : weatherExerciseSuggestions(conditions.weather.data, conditions.airQuality.data, conditions.uv.data)
-  const selected = suggestions?.exercises.includes(chosenExercise) ? chosenExercise : suggestions?.exercises[0] ?? ''
+
+  const routePoints = useMemo(
+    () =>
+      !todaySelected
+        ? dailyRoute.points
+        : dailyRoute.auth === 'ready' && dailyRoute.points.length
+          ? dailyRoute.points
+          : movement.points.length
+            ? movement.points
+            : location.coordinates
+              ? [location.coordinates]
+              : [],
+    [
+      todaySelected,
+      dailyRoute.auth,
+      dailyRoute.points,
+      movement.points,
+      location.coordinates,
+    ],
+  )
+
+  const suggestions = conditions.weather.error
+    ? null
+    : weatherExerciseSuggestions(
+        conditions.weather.data,
+        conditions.airQuality.data,
+        conditions.uv.data,
+      )
+
+  const selected = suggestions?.exercises.includes(chosenExercise)
+    ? chosenExercise
+    : suggestions?.exercises[0] ?? ''
+
   const item = items.find(value => value.name === selected)
-  const recommendation = dailyExerciseRecommendation(selected, suggestions ? conditions.weather.data : null, conditions.airQuality.data, conditions.uv.data, recommendationStatus(location, conditions.weather))
-  return <><style>{dashboardStyles}</style><div className="dashboard exercise-page dashboard-exercise"><Sidebar /><main className="content" id="top">
-    <header className="welcome"><div><span className="eyebrow">MOVE AT YOUR OWN PACE</span><h1>운동 정보</h1><p><Icon name="activity" size={12} /> 운동별 추천 정보와 주의사항을 확인하세요</p></div><div className="header-actions"><a href="/dashboard">대시보드로 돌아가기 ↗</a></div></header>
-    <section className="panel weather-exercise-picks" aria-labelledby="weather-picks-title">
-      <div className="title-row"><h2 id="weather-picks-title">오늘 날씨에 맞는 운동</h2><span className="good">{suggestions ? '날씨 기반 추천' : '날씨 확인 필요'}</span></div>
-      <p role="status">{suggestions?.reason ?? (conditions.weather.error ? '날씨를 갱신하지 못했습니다. 다시 조회하면 추천 운동을 확인할 수 있어요.' : recommendation.message)}</p>
-      {suggestions && <div className="weather-pick-list">{suggestions.exercises.map(name => {
-        const exercise = items.find(value => value.name === name)!
-        return <button key={name} type="button" className="weather-pick" aria-pressed={name === selected} onClick={() => setChosenExercise(name)}><Icon name={exercise.icon} size={24} /><span>{name === '수영' ? '실내 수영' : name}</span><small>{name === selected ? '현재 보고 있는 운동' : '운동 정보 보기'}</small></button>
-      })}</div>}
-      {suggestions && (!conditions.airQuality.data || !conditions.uv.data) && <small>대기질·자외선은 확인된 정보만 반영합니다.</small>}
-      <RecommendationRetry location={location} weather={conditions.weather} retry={conditions.retry} />
-    </section>
-    {item && <div className="exercise-info-grid"><section className="panel exercise-hero" style={{ '--exercise-color': item.color } as CSSProperties}><div className="exercise-hero-icon"><Icon name={item.icon} size={44} /></div><span className="good">{conditions.weather.data ? '오늘 날씨 반영' : recommendation.time}</span><h2>{item.name}</h2><p>{item.description}</p><div className="exercise-metrics"><div><b>{recommendation.minutes == null ? '—' : `${recommendation.minutes}분`}</b><small>추천 운동 시간</small></div><div><b>{recommendation.intensity}</b><small>운동 강도</small></div><div><b>{recommendation.calories == null ? '—' : `${recommendation.calories} kcal`}</b><small>예상 소모량</small></div></div></section><section className="panel"><div className="title-row"><h2>운동 가이드</h2><span className="level">안전하게 시작하기</span></div><p className="updated">오늘의 {item.name} 체크리스트</p><div className="exercise-tips">{item.tips.map((tip, index) => <div key={tip}><span>{index + 1}</span><p>{tip}</p></div>)}</div></section></div>}
-    <section className="panel today-exercise-recommendation"><div className="title-row"><h2><span className="title-icon"><Icon name="sun" size={15} /></span>{selected ? `오늘의 ${selected} 추천` : '현재 날씨 정보'}</h2><span className="level">{recommendation.time}</span></div><p role="status">{recommendation.message}</p><RecommendationRetry location={location} weather={conditions.weather} retry={conditions.retry} /><div className="condition-summary"><span>기온 <b>{conditions.weather.data?.temperature ?? '—'}°C</b></span><span>강수확률 <b>{conditions.weather.data?.precipitation ?? '—'}%</b></span><span>자외선 <b>{conditions.uv.data ? `${conditions.uv.data.value} (${conditions.uv.data.grade})` : '—'}</b></span><span>미세먼지 PM10 <b>{conditions.airQuality.data?.pm10.value == null ? '—' : `${conditions.airQuality.data.pm10.value}㎍/㎥`} · {conditions.airQuality.data?.pm10.grade ?? '—'}</b></span><span>초미세먼지 PM2.5 <b>{conditions.airQuality.data?.pm25.value == null ? '—' : `${conditions.airQuality.data.pm25.value}㎍/㎥`} · {conditions.airQuality.data?.pm25.grade ?? '—'}</b></span></div></section>
-    {conditions.airQuality.data?.warning && <p className="api-message" role="status">{conditions.airQuality.data.warning}</p>}
-    <section className="panel movement-summary"><div className="movement-summary-icon"><Icon name="pin" size={24} /></div><div><p>내가 이동한 거리</p><h2><AnimatedNumber text={movement.meters < 1000 ? `${Math.round(movement.meters)} m` : `${(movement.meters / 1000).toFixed(2)} km`} /></h2><small>운동 정보 페이지를 연 이후 Geolocation으로 측정한 거리입니다.</small></div></section>
-    <section className="panel movement-map-panel"><div className="title-row"><h2><span className="title-icon"><Icon name="map" size={15} /></span>내 이동 경로</h2><span className="good">{dailyRoute.selectedDate === dailyRoute.today ? '오늘' : dailyRoute.selectedDate}</span></div>
-      <p className="updated">로그인한 사용자의 이동 경로를 한국 시간 날짜별로 저장합니다.</p>
-      {dailyRoute.auth === 'ready' && <label className="route-date-label">저장된 날짜
-        <select value={dailyRoute.selectedDate} onChange={event => dailyRoute.setSelectedDate(event.target.value)}>
-          {[...new Set([dailyRoute.today, ...dailyRoute.dates])].sort().reverse().map(date => <option key={date} value={date}>{date}</option>)}
-        </select>
-      </label>}
-      {dailyRoute.auth === 'checking' && <p className="updated" role="status">저장된 경로를 확인하는 중…</p>}
-      {dailyRoute.auth === 'guest' && <p className="movement-error">현재 경로는 화면에서만 볼 수 있습니다. <a href={loginUrl(window.location.pathname + window.location.search + window.location.hash)}>로그인</a>하면 이동 경로가 날짜별로 저장됩니다.</p>}
-      {todaySelected && location.error && <p className="movement-error" role="alert">{location.error}</p>}
-      {dailyRoute.error && <p className="movement-error" role="alert">{dailyRoute.error}</p>}
-      {movement.error && <p className="movement-error" role="alert">{movement.error}</p>}
-      <MovementRouteMap points={routePoints} emptyMessage={todaySelected ? '브라우저에서 위치를 확인하지 못했습니다. 위치 권한을 확인하고 페이지를 새로고침해 주세요.' : '이 날짜에 저장된 이동 경로가 없습니다.'} />
-    </section>
-  </main></div></>
+
+  const recommendation = dailyExerciseRecommendation(
+    selected,
+    suggestions ? conditions.weather.data : null,
+    conditions.airQuality.data,
+    conditions.uv.data,
+    recommendationStatus(location, conditions.weather),
+  )
+
+  return (
+    <>
+      <style>{dashboardStyles}</style>
+
+      <div className="dashboard exercise-page dashboard-exercise">
+        <Sidebar />
+
+        <main className="content" id="top">
+          <header className="welcome">
+            <div>
+              <span className="eyebrow">MOVE AT YOUR OWN PACE</span>
+
+              <h1>운동 정보</h1>
+
+              <p>
+                <Icon name="activity" size={12} />
+                운동별 추천 정보와 주의사항을 확인하세요
+              </p>
+            </div>
+
+            <div className="header-actions">
+              <a href="/dashboard">대시보드로 돌아가기 ↗</a>
+            </div>
+          </header>
+
+          <section
+            className="panel weather-exercise-picks"
+            aria-labelledby="weather-picks-title"
+          >
+            <div className="title-row">
+              <h2 id="weather-picks-title">오늘 날씨에 맞는 운동</h2>
+
+              <span className="good">
+                {suggestions ? '날씨 기반 추천' : '날씨 확인 필요'}
+              </span>
+            </div>
+
+            <p role="status">
+              {suggestions?.reason ??
+                (conditions.weather.error
+                  ? '날씨를 갱신하지 못했습니다. 다시 조회하면 추천 운동을 확인할 수 있어요.'
+                  : recommendation.message)}
+            </p>
+
+            {suggestions && (
+              <div className="weather-pick-list">
+                {suggestions.exercises.map(name => {
+                  const exercise = items.find(value => value.name === name)!
+
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      className="weather-pick"
+                      aria-pressed={name === selected}
+                      onClick={() => setChosenExercise(name)}
+                    >
+                      <Icon name={exercise.icon} size={24} />
+
+                      <span>{name === '수영' ? '실내 수영' : name}</span>
+
+                      <small>
+                        {name === selected
+                          ? '현재 보고 있는 운동'
+                          : '운동 정보 보기'}
+                      </small>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {suggestions &&
+              (!conditions.airQuality.data || !conditions.uv.data) && (
+                <small>
+                  대기질·자외선은 확인된 정보만 반영합니다.
+                </small>
+              )}
+
+            <RecommendationRetry
+              location={location}
+              weather={conditions.weather}
+              retry={conditions.retry}
+            />
+          </section>
+
+          {item && (
+            <div className="exercise-info-grid">
+              <section
+                className="panel exercise-hero"
+                style={
+                  {
+                    '--exercise-color': item.color,
+                  } as CSSProperties
+                }
+              >
+                <div className="exercise-hero-icon">
+                  <Icon name={item.icon} size={44} />
+                </div>
+
+                <span className="good">
+                  {conditions.weather.data
+                    ? '오늘 날씨 반영'
+                    : recommendation.time}
+                </span>
+
+                <h2>{item.name}</h2>
+
+                <p>{item.description}</p>
+
+                <div className="exercise-metrics">
+                  <div>
+                    <b>
+                      {recommendation.minutes == null
+                        ? '—'
+                        : `${recommendation.minutes}분`}
+                    </b>
+
+                    <small>추천 운동 시간</small>
+                  </div>
+
+                  <div>
+                    <b>{recommendation.intensity}</b>
+                    <small>운동 강도</small>
+                  </div>
+
+                  <div>
+                    <b>
+                      {recommendation.calories == null
+                        ? '—'
+                        : `${recommendation.calories} kcal`}
+                    </b>
+
+                    <small>예상 소모량</small>
+                  </div>
+                </div>
+              </section>
+
+              <section className="panel">
+                <div className="title-row">
+                  <h2>운동 가이드</h2>
+                  <span className="level">안전하게 시작하기</span>
+                </div>
+
+                <p className="updated">
+                  오늘의 {item.name} 체크리스트
+                </p>
+
+                <div className="exercise-tips">
+                  {item.tips.map((tip, index) => (
+                    <div key={tip}>
+                      <span>{index + 1}</span>
+                      <p>{tip}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          )}
+
+          <section className="panel today-exercise-recommendation">
+            <div className="title-row">
+              <h2>
+                <span className="title-icon">
+                  <Icon name="sun" size={15} />
+                </span>
+
+                {selected
+                  ? `오늘의 ${selected} 추천`
+                  : '현재 날씨 정보'}
+              </h2>
+
+              <span className="level">
+                {recommendation.time}
+              </span>
+            </div>
+
+            <p role="status">
+              {recommendation.message}
+            </p>
+
+            <RecommendationRetry
+              location={location}
+              weather={conditions.weather}
+              retry={conditions.retry}
+            />
+
+            <div className="condition-summary">
+              <span>
+                기온{' '}
+                <b>
+                  {conditions.weather.data?.temperature ?? '—'}°C
+                </b>
+              </span>
+
+              <span>
+                강수확률{' '}
+                <b>
+                  {conditions.weather.data?.precipitation ?? '—'}%
+                </b>
+              </span>
+
+              <span>
+                자외선{' '}
+                <b>
+                  {conditions.uv.data
+                    ? `${conditions.uv.data.value} (${conditions.uv.data.grade})`
+                    : '—'}
+                </b>
+              </span>
+
+              <span>
+                미세먼지 PM10{' '}
+                <b>
+                  {conditions.airQuality.data?.pm10.value == null
+                    ? '—'
+                    : `${conditions.airQuality.data.pm10.value}㎍/㎥`}
+                  {' · '}
+                  {conditions.airQuality.data?.pm10.grade ?? '—'}
+                </b>
+              </span>
+
+              <span>
+                초미세먼지 PM2.5{' '}
+                <b>
+                  {conditions.airQuality.data?.pm25.value == null
+                    ? '—'
+                    : `${conditions.airQuality.data.pm25.value}㎍/㎥`}
+                  {' · '}
+                  {conditions.airQuality.data?.pm25.grade ?? '—'}
+                </b>
+              </span>
+            </div>
+          </section>
+
+          {conditions.airQuality.data?.warning && (
+            <p className="api-message" role="status">
+              {conditions.airQuality.data.warning}
+            </p>
+          )}
+
+          <section className="panel movement-summary">
+            <div className="movement-summary-icon">
+              <Icon name="pin" size={24} />
+            </div>
+
+            <div>
+              <p>내가 이동한 거리</p>
+
+              <h2>
+                <AnimatedNumber
+                  text={
+                    movement.meters < 1000
+                      ? `${Math.round(movement.meters)} m`
+                      : `${(movement.meters / 1000).toFixed(2)} km`
+                  }
+                />
+              </h2>
+
+              <small>
+                운동 정보 페이지를 연 이후 Geolocation으로 측정한 거리입니다.
+              </small>
+            </div>
+          </section>
+
+          <section className="panel movement-map-panel">
+            <div className="title-row">
+              <h2>
+                <span className="title-icon">
+                  <Icon name="map" size={15} />
+                </span>
+                내 이동 경로
+              </h2>
+
+              <span className="good">
+                {dailyRoute.selectedDate === dailyRoute.today
+                  ? '오늘'
+                  : dailyRoute.selectedDate}
+              </span>
+            </div>
+
+            <p className="updated">
+              로그인한 사용자의 이동 경로를 한국 시간 날짜별로 저장합니다.
+            </p>
+
+            {dailyRoute.auth === 'ready' && (
+              <label className="route-date-label">
+                저장된 날짜
+
+                <select
+                  value={dailyRoute.selectedDate}
+                  onChange={event =>
+                    dailyRoute.setSelectedDate(event.target.value)
+                  }
+                >
+                  {[
+                    ...new Set([
+                      dailyRoute.today,
+                      ...dailyRoute.dates,
+                    ]),
+                  ]
+                    .sort()
+                    .reverse()
+                    .map(date => (
+                      <option key={date} value={date}>
+                        {date}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            )}
+
+            {dailyRoute.auth === 'checking' && (
+              <p className="updated" role="status">
+                저장된 경로를 확인하는 중…
+              </p>
+            )}
+
+            {dailyRoute.auth === 'guest' && (
+              <p className="movement-error">
+                현재 경로는 화면에서만 볼 수 있습니다.{' '}
+
+                <a
+                  href={loginUrl(
+                    window.location.pathname +
+                      window.location.search +
+                      window.location.hash,
+                  )}
+                >
+                  로그인
+                </a>
+
+                하면 이동 경로가 날짜별로 저장됩니다.
+              </p>
+            )}
+
+            {todaySelected && location.error && (
+              <p className="movement-error" role="alert">
+                {location.error}
+              </p>
+            )}
+
+            {dailyRoute.error && (
+              <p className="movement-error" role="alert">
+                {dailyRoute.error}
+              </p>
+            )}
+
+            {movement.error && (
+              <p className="movement-error" role="alert">
+                {movement.error}
+              </p>
+            )}
+
+            <MovementRouteMap
+              points={routePoints}
+              emptyMessage={
+                todaySelected
+                  ? '브라우저에서 위치를 확인하지 못했습니다. 위치 권한을 확인하고 페이지를 새로고침해 주세요.'
+                  : '이 날짜에 저장된 이동 경로가 없습니다.'
+              }
+            />
+          </section>
+        </main>
+      </div>
+    </>
+  )
 }
