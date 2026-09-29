@@ -30,9 +30,9 @@ export default function ExerciseInfo() {
   const todaySelected = dailyRoute.selectedDate === dailyRoute.today
   const routePoints = useMemo(() => !todaySelected ? dailyRoute.points
     : dailyRoute.auth === 'ready' && dailyRoute.points.length ? dailyRoute.points
-    : movement.points.length ? movement.points
-    : location.coordinates ? [location.coordinates] : [],
-  [todaySelected, dailyRoute.auth, dailyRoute.points, movement.points, location.coordinates])
+      : movement.points.length ? movement.points
+        : location.coordinates ? [location.coordinates] : [],
+    [todaySelected, dailyRoute.auth, dailyRoute.points, movement.points, location.coordinates])
   const item = items.find(value => value.name === selected) ?? items[0]
   const recommendation = dailyExerciseRecommendation(selected, conditions.weather.data, conditions.airQuality.data, conditions.uv.data, recommendationStatus(location, conditions.weather))
   return <><style>{dashboardStyles}</style><div className="dashboard exercise-page dashboard-exercise"><Sidebar /><main className="content" id="top">
