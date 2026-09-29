@@ -76,7 +76,8 @@ H2 데이터는 `auth-data` 볼륨에 보존됩니다. 현재 Compose는 Vite �
 루트 `.env`에 도메인과 인증키를 설정한 뒤 실행합니다.
 
 ```sh
-docker compose --env-file .env -f docker-compose.prod.yml up -d --build
+docker compose --env-file .env -f docker-compose.prod.yml pull
+docker compose --env-file .env -f docker-compose.prod.yml up -d --no-build
 ```
 
 배포 구성은 빌드된 프런트엔드, Node API 서버, Spring Boot와 HTTPS 프록시를 실행합니다.

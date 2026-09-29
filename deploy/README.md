@@ -10,6 +10,34 @@
                             └─ /api/fitmap/   Node API:3000
 ```
 
+## Docker Hub 이미지 배포 순서
+
+### 1. 소스가 있는 개발 PC에서 빌드·업로드
+
+```bash
+docker login
+docker compose --env-file .env -f docker-compose.build.yml build
+docker compose --env-file .env -f docker-compose.build.yml push
+```
+
+이미지는 `kauer7816/fitmap-frontend`, `kauer7816/fitmap-backend`, `kauer7816/fitmap-api` 세 개입니다.
+`IMAGE_TAG` 기본값은 `latest`이며 빌드 PC와 Ubuntu 서버에 같은 태그를 설정합니다.
+기존 프런트엔드 이미지도 `web` 타깃으로 빌드해야 Nginx 설정과 상태 검사가 포함됩니다.
+Node 날씨·장소 API용 `fitmap-api` 이미지도 반드시 업로드해야 합니다.
+
+### 2. Ubuntu 서버에 배포 파일 복사
+
+서버에는 `docker-compose.prod.yml`, `.env`, `.env.example`, `deploy/Caddyfile`이 필요합니다.
+스크립트를 사용하려면 `deploy/ubuntu-deploy.sh`도 복사합니다. frontend/backend 소스 폴더는 필요하지 않습니다.
+
+```bash
+cd /home/ubuntu/fitmap
+docker compose --env-file .env -f docker-compose.prod.yml pull
+docker compose --env-file .env -f docker-compose.prod.yml up -d --no-build
+```
+
+비공개 이미지라면 Ubuntu 서버에서도 `docker login`이 필요합니다.
+
 ## 1. 우분투 준비
 
 Ubuntu 22.04/24.04 LTS에서 [Docker 공식 설치 안내](https://docs.docker.com/engine/install/ubuntu/)의 apt 저장소 방식으로 Docker Engine과 Compose 플러그인을 설치합니다.
@@ -42,7 +70,7 @@ sudo docker compose version
 | `backend/src/main/resources/application.properties` | 환경변수 기반 DB·쿠키 설정 |
 | `deploy/Caddyfile` | 도메인의 HTTPS 인증서 발급·갱신 |
 | `deploy/ubuntu-setup.sh` | Ubuntu Docker 설치 |
-| `deploy/ubuntu-deploy.sh` | 설정 검사 후 이미지 빌드·기동 |
+| `deploy/ubuntu-deploy.sh` | 설정 검사 후 이미지 다운로드·기동 |
 
 현재 프로젝트의 인증 컨트롤러와 상대경로 API 호출을 그대로 사용합니다.
 스크린샷의 다른 프로젝트에 있는 `SecurityConfig.java`, `LoginService.java` 파일을 새로 만들 필요는 없습니다.
@@ -66,7 +94,7 @@ openssl rand -hex 24
 
 ## 3. 실행
 
-1. 서버에 Docker와 Compose를 설치하고 소스를 복사합니다.
+1. 서버에 Docker와 Compose를 설치하고 배포 파일을 복사합니다.
 2. 루트 `.env.example`을 `.env`로 복사하고 값을 입력합니다. 기존 `.env`는 덮어쓰지 마세요.
 3. `SITE_ADDRESS`에는 도메인만, `FRONTEND_URL`에는 `https://`를 포함한 주소를 입력합니다.
 4. 도메인의 DNS를 서버 IP에 연결하고 80·443 포트를 엽니다. Caddy가 HTTPS 인증서를 발급합니다.
@@ -98,7 +126,7 @@ sudo docker compose -f docker-compose.prod.yml logs -f
 
 프런트엔드는 기존 `/api/...` 상대 경로를 사용하므로 서버 IP를 소스에 하드코딩하지 않습니다.
 
-로컬 개발은 기존 `docker compose up -d --build`와 `frontend/.env.local`을 사용합니다.
+로컬 개발은 기존 `docker compose up -d --no-build`와 `frontend/.env.local`을 사용합니다.
 배포 환경변수는 루트 `.env`에서 읽습니다. 실제 키는 Git과 이미지에 포함하지 않습니다.
 `VITE_KAKAO_JAVASCRIPT_KEY`는 브라우저용 공개 키이며 변경 후 이미지를 다시 빌드해야 합니다.
 서버용 키 변경 후에는 위 배포 명령을 다시 실행합니다.

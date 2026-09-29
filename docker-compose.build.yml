@@ -1,0 +1,19 @@
+# Use on the development computer with the complete source tree.
+services:
+  frontend:
+    image: kauer7816/fitmap-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.prod
+      target: web
+      args:
+        VITE_KAKAO_JAVASCRIPT_KEY: ${VITE_KAKAO_JAVASCRIPT_KEY:?Set Kakao JavaScript key}
+  api:
+    image: kauer7816/fitmap-api:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.prod
+      target: api
+  backend:
+    image: kauer7816/fitmap-backend:${IMAGE_TAG:-latest}
+    build: ./backend

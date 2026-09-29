@@ -18,5 +18,6 @@ if grep -Eq '^[[:space:]]*(SITE_ADDRESS|FRONTEND_URL)=.*example\.com' .env; then
   exit 1
 fi
 docker compose --env-file .env -f docker-compose.prod.yml config --quiet
-docker compose --env-file .env -f docker-compose.prod.yml up -d --build --wait --wait-timeout 180
+docker compose --env-file .env -f docker-compose.prod.yml pull
+docker compose --env-file .env -f docker-compose.prod.yml up -d --no-build --wait --wait-timeout 180
 docker compose --env-file .env -f docker-compose.prod.yml ps

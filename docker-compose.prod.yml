@@ -16,12 +16,7 @@ services:
       frontend:
         condition: service_healthy
   frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile.prod
-      target: web
-      args:
-        VITE_KAKAO_JAVASCRIPT_KEY: ${VITE_KAKAO_JAVASCRIPT_KEY:?Set Kakao JavaScript key}
+    image: kauer7816/fitmap-frontend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       api:
@@ -29,10 +24,7 @@ services:
       backend:
         condition: service_started
   api:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile.prod
-      target: api
+    image: kauer7816/fitmap-api:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       AUTH_API_TARGET: http://backend:8080
@@ -43,7 +35,7 @@ services:
     depends_on:
       - backend
   backend:
-    build: ./backend
+    image: kauer7816/fitmap-backend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
