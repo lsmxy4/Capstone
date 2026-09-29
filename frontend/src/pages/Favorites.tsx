@@ -1,5 +1,6 @@
 import { loginUrl } from '../utils/authNavigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import './Favorites.scss'
 import dashboardStyles from './Dashboard.scss?inline'
 import Icon from '../components/Icon'
@@ -7,9 +8,22 @@ import Sidebar from '../components/layout/Sidebar'
 import { getFavorites, removeFavorite, type FavoritePlace } from '../api/favorites'
 import { useAuth } from '../contexts/AuthContext'
 
+const broadCategories = ['공원·자연', '산책·등산', '스포츠·체육', '편의시설', '기타'] as const
+
 function categoryOf(place: FavoritePlace) {
-  const category = place.category.split(' > ').at(-1)?.trim() || '기타'
-  return /도시\s*근린\s*공원/.test(category) ? '공원' : category
+  const classify = (text: string) => {
+    if (/주차|화장실|편의점|매점|휴게소|대여소/.test(text)) return '편의시설'
+    if (/수영|체육|스포츠|운동장|경기장|헬스|피트니스|요가|필라테스|골프|축구|야구|테니스|농구|배드민턴|탁구|볼링|클라이밍|무술|태권도|자전거/.test(text)) return '스포츠·체육'
+    if (/산책|등산|둘레길|탐방로|트레킹/.test(text)) return '산책·등산'
+    if (/공원|숲|수목원|식물원|자연|유원지|산$|계곡|해수욕장/.test(text)) return '공원·자연'
+    return null
+  }
+  // Prefer the specific facility category over words in the place name.
+  for (const category of place.category.split('>').reverse()) {
+    const group = classify(category.trim())
+    if (group) return group
+  }
+  return classify(place.name) ?? '기타'
 }
 
 function iconOf(place: FavoritePlace) {
@@ -47,6 +61,7 @@ export default function Favorites() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const activeTransition = useRef<ViewTransition | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -69,18 +84,34 @@ export default function Favorites() {
     return () => { active = false }
   }, [user, authLoading])
 
-  const categories = useMemo(() => ['전체', ...new Set(places.map(categoryOf))], [places])
+  const categories = useMemo(() => {
+    const available = new Set(places.map(categoryOf))
+    return ['전체', ...broadCategories.filter(category => available.has(category))]
+  }, [places])
+  const activeCategory = categories.includes(selectedCategory) ? selectedCategory : '전체'
   const filteredPlaces = useMemo(() => {
     const search = query.trim().toLocaleLowerCase()
     const result = places.filter(place =>
-      (selectedCategory === '전체' || categoryOf(place) === selectedCategory) &&
+      (activeCategory === '전체' || categoryOf(place) === activeCategory) &&
       (!search || `${place.name} ${place.address} ${place.category}`.toLocaleLowerCase().includes(search)),
     )
     if (sort === 'distance') result.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
     else if (sort === 'name') result.sort((a, b) => a.name.localeCompare(b.name, 'ko'))
     else result.sort((a, b) => b.savedAt.localeCompare(a.savedAt))
     return result
-  }, [places, selectedCategory, query, sort])
+  }, [places, activeCategory, query, sort])
+
+  function changeCategory(category: string) {
+    if (category === activeCategory) return
+    activeTransition.current?.skipTransition()
+    if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setSelectedCategory(category)
+      return
+    }
+    activeTransition.current = document.startViewTransition(() => {
+      flushSync(() => setSelectedCategory(category))
+    })
+  }
 
   async function handleRemove(place: FavoritePlace) {
     if (authLoading || !user) {
@@ -136,8 +167,8 @@ export default function Favorites() {
 
           <div className="category-tabs" role="group" aria-label="장소 분류">
             {categories.map(category => (
-              <button key={category} type="button" className={`category ${selectedCategory === category ? 'active' : ''}`}
-                aria-pressed={selectedCategory === category} onClick={() => setSelectedCategory(category)}>
+              <button key={category} type="button" className={`category ${activeCategory === category ? 'active' : ''}`}
+                aria-pressed={activeCategory === category} onClick={() => changeCategory(category)}>
                 {category}
               </button>
             ))}
@@ -150,7 +181,8 @@ export default function Favorites() {
 
           <div className="favorite-grid">
             {filteredPlaces.map(place => (
-              <article className="favorite-card" key={place.id}>
+              <article className="favorite-card" key={place.id}
+                style={{ viewTransitionName: `favorite-${Array.from(place.id).map(char => char.codePointAt(0)!.toString(16)).join('-')}` }}>
                 <div className="place-image">
                   <span className="place-icon" aria-hidden="true">{iconOf(place)}</span>
                   <button className="favorite-star" type="button" aria-label={`${place.name} 즐겨찾기 삭제`}
