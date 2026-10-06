@@ -121,6 +121,53 @@ test('UV flow uses current model data without the rejected KMA request', async (
   } finally { globalThis.fetch = original }
 })
 
+test('UV retries a temporary connection failure and preserves a valid zero index', async () => {
+  const original = globalThis.fetch
+  let attempts = 0
+  globalThis.fetch = (async () => {
+    if (++attempts === 1) throw new TypeError('fetch failed', { cause: { code: 'ECONNRESET' } })
+    return new Response(JSON.stringify({ current: { time: '2026-10-06T00:00', uv_index: 0 } }))
+  }) as typeof fetch
+  try {
+    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12')
+    assert.equal(attempts, 2)
+    assert.equal(result.status, 200)
+    assert.equal(result.data.value, 0)
+    assert.equal(result.data.grade, '낮음')
+  } finally { globalThis.fetch = original }
+})
+
+test('UV stops after one retry when the provider keeps timing out', async () => {
+  const original = globalThis.fetch
+  let attempts = 0
+  globalThis.fetch = (async () => {
+    attempts++
+    throw new DOMException('Timed out', 'TimeoutError')
+  }) as typeof fetch
+  try {
+    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12')
+    assert.equal(attempts, 2)
+    assert.equal(result.status, 502)
+    assert.match(result.data.error, /연결하지 못했습니다/)
+    assert.equal(result.data.value, undefined)
+  } finally { globalThis.fetch = original }
+})
+
+test('UV does not retry provider rate limits', async () => {
+  const original = globalThis.fetch
+  let attempts = 0
+  globalThis.fetch = (async () => {
+    attempts++
+    return new Response('', { status: 429 })
+  }) as typeof fetch
+  try {
+    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12')
+    assert.equal(attempts, 1)
+    assert.equal(result.status, 502)
+    assert.match(result.data.error, /요청 한도/)
+  } finally { globalThis.fetch = original }
+})
+
 test('Kakao requests attach server key, encode query and normalize results', async () => {
   const original = globalThis.fetch
   globalThis.fetch = (async (input, options) => {

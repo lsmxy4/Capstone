@@ -321,6 +321,15 @@ export default function Dashboard() {
 
               </div>
 
+              {uv.error && (
+                <div>
+                  <p role="alert">자외선: {uv.error}</p>
+                  <button className="recommendation-retry" type="button" onClick={retry}>
+                    <Icon name="refresh" size={15} />자외선 다시 불러오기
+                  </button>
+                </div>
+              )}
+
             </section>
 
             {/* 운동 선택 */}

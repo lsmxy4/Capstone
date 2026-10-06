@@ -10,12 +10,30 @@ class ApiError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status }
 }
 
-async function upstream<T>(url: URL, headers?: Record<string, string>): Promise<T> {
-  let response = await fetch(url, { headers, signal: AbortSignal.timeout(12000) })
-  if (response.status >= 500 && response.status < 600) {
+async function fetchUpstream(url: URL, headers?: Record<string, string>): Promise<Response> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetch(url, { headers, signal: AbortSignal.timeout(12000) })
+      if (attempt === 1 || response.status < 500 || response.status >= 600) return response
+      await response.body?.cancel()
+    } catch (error) {
+      const connectionError = error instanceof TypeError || (error instanceof Error && error.name === 'TimeoutError')
+      if (!connectionError) throw error
+      if (attempt === 1) {
+        const cause = error instanceof Error ? error.cause : null
+        const code = cause && typeof cause === 'object' && 'code' in cause ? String(cause.code) : error.name
+        // Log only the host/path and error code; query strings can contain API keys.
+        console.warn(`외부 API 연결 오류: ${url.hostname}${url.pathname} ${code}`)
+        throw new ApiError(502, '외부 API에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+      }
+    }
     await new Promise(resolve => setTimeout(resolve, 300))
-    response = await fetch(url, { headers, signal: AbortSignal.timeout(12000) })
   }
+  throw new ApiError(502, '외부 API에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+}
+
+async function upstream<T>(url: URL, headers?: Record<string, string>): Promise<T> {
+  const response = await fetchUpstream(url, headers)
   if (!response.ok) {
     console.warn(`외부 API 오류: ${url.hostname}${url.pathname} HTTP ${response.status}`)
     const message = response.status === 401 || response.status === 403

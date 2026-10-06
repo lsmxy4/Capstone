@@ -341,7 +341,11 @@ export default function ExerciseInfo() {
                 <b>
                   {conditions.uv.data
                     ? `${conditions.uv.data.value} (${conditions.uv.data.grade})`
-                    : '—'}
+                    : conditions.uv.loading
+                    ? '조회 중…'
+                    : conditions.uv.error
+                    ? '조회 실패'
+                    : '대기 중'}
                 </b>
               </span>
 
@@ -368,6 +372,15 @@ export default function ExerciseInfo() {
               </span>
             </div>
           </section>
+
+          {conditions.uv.error && (
+            <div>
+              <p className="api-message" role="alert">자외선: {conditions.uv.error}</p>
+              <button className="recommendation-retry" type="button" onClick={conditions.retry}>
+                <Icon name="refresh" size={15} />자외선 다시 불러오기
+              </button>
+            </div>
+          )}
 
           {conditions.airQuality.data?.warning && (
             <p className="api-message" role="status">
