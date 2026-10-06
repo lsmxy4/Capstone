@@ -12,11 +12,11 @@ const broadCategories = ['공원·자연', '산책·등산', '스포츠·체육'
 
 // 카테고리별 대표 이미지
 const categoryImages: Record<string, string> = {
-  '공원·자연': '/images/places/park.jpg',
-  '산책·등산': '/images/places/hiking.jpg',
-  '스포츠·체육': '/images/places/sports.jpg',
-  '편의시설': '/images/places/facility.jpg',
-  '기타': '/images/places/default.jpg',
+  '공원·자연': '/images/places/park.svg',
+  '산책·등산': '/images/places/hiking.svg',
+  '스포츠·체육': '/images/places/sports.svg',
+  '편의시설': '/images/places/facility.svg',
+  '기타': '/images/places/default.svg',
 }
 
 const placeImageRules: [RegExp, string][] = [

@@ -145,8 +145,8 @@ export default function Login({ onLoginSuccess, onNavigateSignup }: LoginProps =
             <div className="form-field">
               <div className="form-field-label-row">
                 <label htmlFor="password">비밀번호</label>
-                {/* 비밀번호 찾기 페이지/기능은 이번 작업 범위 밖 — 추후 연결 */}
-                <a href="#find-password" className="link-muted">비밀번호 찾기</a>
+                {/* 비밀번호 찾기 연동 전까지 비활성화 */}
+                <button type="button" className="link-muted" disabled>비밀번호 찾기</button>
               </div>
               <div className="input-wrap">
                 <LoginIcon name="lock" />
