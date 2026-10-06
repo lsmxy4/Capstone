@@ -19,6 +19,31 @@ const categoryImages: Record<string, string> = {
   '기타': '/images/places/default.jpg',
 }
 
+const placeImageRules: [RegExp, string][] = [
+  [/주차/, 'parking'],
+  [/화장실/, 'restroom'],
+  [/편의점|매점|휴게소/, 'store'],
+  [/수영/, 'swimming'],
+  [/골프/, 'golf'],
+  [/축구|풋살/, 'football'],
+  [/테니스|배드민턴/, 'tennis'],
+  [/농구/, 'basketball'],
+  [/야구/, 'baseball'],
+  [/볼링/, 'bowling'],
+  [/자전거|대여소/, 'cycling'],
+  [/러닝|트랙|운동장|육상/, 'track'],
+  [/헬스|피트니스|체육관|체육센터|스포츠센터|요가|필라테스/, 'gym'],
+]
+
+function imageOf(place: FavoritePlace) {
+  for (const text of [...place.category.split('>').reverse(), place.name]) {
+    const match = placeImageRules.find(([pattern]) => pattern.test(text))
+    if (match) return `/images/places/${match[1]}.svg`
+  }
+
+  return categoryImages[categoryOf(place)] ?? categoryImages['기타']
+}
+
 function categoryOf(place: FavoritePlace) {
   const classify = (text: string) => {
     if (/주차|화장실|편의점|매점|휴게소|대여소/.test(text)) return '편의시설'
@@ -360,9 +385,7 @@ export default function Favorites() {
               const placeCategory = categoryOf(place)
 
               // 카테고리에 맞는 사진 선택
-              const placeImage =
-                categoryImages[placeCategory] ??
-                categoryImages['기타']
+              const placeImage = imageOf(place)
 
               return (
                 <article
@@ -384,12 +407,14 @@ export default function Favorites() {
 
                     <img
                       src={placeImage}
-                      alt={`${place.name} 대표 이미지`}
+                      alt={`${place.name} 시설 유형 대표 이미지`}
                       className="place-photo"
                       onError={event => {
                         // 사진을 찾지 못했을 경우 기본 이미지 대신
                         // 기존 아이콘을 보여주기 위한 처리
                         event.currentTarget.style.display = 'none'
+                        const fallback = event.currentTarget.parentElement?.querySelector<HTMLElement>('.place-icon')
+                        if (fallback) fallback.style.opacity = '1'
                       }}
                     />
 
