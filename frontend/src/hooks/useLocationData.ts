@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import type { Coordinates } from '../types/location'
 import type { Weather } from '../types/weather'
 import type { Place } from '../types/place'
@@ -19,6 +19,7 @@ export function useLocationData(coordinates: Coordinates | null, exercise: strin
   const [airQuality, setAirQuality] = useState<Result<AirQuality>>(empty)
   const [uv, setUv] = useState<Result<UvIndex>>(empty)
   const [retryCount, setRetryCount] = useState(0)
+  const previousPosition = useRef<string | null>(null)
   const retry = () => setRetryCount(count => count + 1)
   useEffect(() => {
     if (!coordinates) { setWeather(empty()); return }
@@ -50,9 +51,12 @@ export function useLocationData(coordinates: Coordinates | null, exercise: strin
   }, [coordinates, retryCount])
   useEffect(() => {
     const controller = new AbortController()
-    if (!coordinates) { setRegion(empty()); setAirQuality(empty()); setUv(empty()); return }
-    const run = async <T,>(request: Promise<T>, set: (result: Result<T>) => void) => {
-      set({ data: null, loading: true, error: null })
+    if (!coordinates) { previousPosition.current = null; setRegion(empty()); setAirQuality(empty()); setUv(empty()); return }
+    const position = JSON.stringify(coordinates)
+    const samePosition = previousPosition.current === position
+    previousPosition.current = position
+    const run = async <T,>(request: Promise<T>, set: Dispatch<SetStateAction<Result<T>>>) => {
+      set(current => ({ data: samePosition ? current.data : null, loading: true, error: null }))
       try { const data = await request; if (!controller.signal.aborted) set({ data, loading: false, error: null }) }
       catch (error) { if (!controller.signal.aborted) set({ data: null, loading: false, error: error instanceof Error ? error.message : '조회 실패' }) }
     }

@@ -86,8 +86,8 @@ export default function Dashboard() {
                   {location.loading
                     ? '위치 확인 중'
                     : location.coordinates
-                    ? '• 위치 확인됨'
-                    : ''}
+                      ? '• 위치 확인됨'
+                      : ''}
                 </span>
               </p>
             </div>
@@ -107,8 +107,8 @@ export default function Dashboard() {
                 {location.loading
                   ? '확인 중…'
                   : location.coordinates
-                  ? '새로고침'
-                  : '내 위치 사용'}
+                    ? '새로고침'
+                    : '내 위치 사용'}
               </button>
 
             </div>
@@ -311,15 +311,16 @@ export default function Dashboard() {
                     {uv.loading
                       ? '자외선 조회 중'
                       : uv.error
-                      ? '자외선 조회 실패'
-                      : `자외선 ${
-                          uv.data?.grade ?? '대기 중'
+                        ? '자외선 조회 실패'
+                        : `자외선 ${uv.data?.grade ?? '대기 중'
                         }`}
                   </small>
 
                 </div>
 
               </div>
+
+              {uv.data && <p className="updated">기상청 자외선 예보 · {uv.data.area} · {uv.data.forecastAt.replace('T', ' ')} 기준</p>}
 
               {uv.error && (
                 <div>
@@ -404,13 +405,12 @@ export default function Dashboard() {
               <p className="updated">
 
                 {airQuality.data
-                  ? `AirKorea · ${airQuality.data.stationName} 측정소 · ${
-                      airQuality.data.measuredAt ??
-                      '측정 시각 미제공'
-                    }`
+                  ? `${airQuality.data.source} · ${airQuality.data.stationName}${airQuality.data.source === 'AirKorea' ? ' 측정소' : ' 모델 추정치'} · ${airQuality.data.measuredAt ??
+                  '측정 시각 미제공'
+                  }`
                   : airQuality.loading
-                  ? '가까운 측정소의 최신 자료를 불러오는 중…'
-                  : '내 위치를 확인하면 대기질이 표시됩니다.'}
+                    ? '가까운 측정소의 최신 자료를 불러오는 중…'
+                    : '내 위치를 확인하면 대기질이 표시됩니다.'}
 
               </p>
 
@@ -422,6 +422,8 @@ export default function Dashboard() {
                   {airQuality.error}
                 </p>
               )}
+
+              {airQuality.data?.warning && <p className="api-message" role="status">{airQuality.data.warning}</p>}
 
               <div className="air-values">
 
@@ -461,7 +463,7 @@ export default function Dashboard() {
                         <AnimatedNumber
                           text={
                             airMetric?.value == null
-                              ? '—'
+                              ? (airQuality.data ? '자료 없음' : '—')
                               : `${airMetric.value} ${unit}`
                           }
                         />
@@ -705,10 +707,10 @@ export default function Dashboard() {
                               place.distance == null
                                 ? '거리 미제공'
                                 : place.distance >= 1000
-                                ? `${(
+                                  ? `${(
                                     place.distance / 1000
                                   ).toFixed(1)}km`
-                                : `${place.distance}m`
+                                  : `${place.distance}m`
                             }
                           />
 

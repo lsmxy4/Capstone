@@ -29,7 +29,7 @@
 - **지도·장소·주소:** Kakao Maps JavaScript SDK, Kakao Local API
 - **날씨:** 기상청 API허브 AWS(자동기상관측장비) 매분관측, 공공데이터포털 단기예보
 - **대기질:** AirKorea, 조회 실패 시 Open-Meteo 추정치로 대체
-- **자외선:** Open-Meteo
+- **자외선:** 기상청 생활기상지수 조회서비스(4.0), 3시간 간격 예보
 - **위치:** 브라우저 Geolocation API
 - **운영 배포:** Docker Compose, Nginx, Caddy
 

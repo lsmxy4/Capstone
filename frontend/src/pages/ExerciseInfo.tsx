@@ -337,7 +337,7 @@ export default function ExerciseInfo() {
               </span>
 
               <span>
-                자외선{' '}
+                자외선 예보{' '}
                 <b>
                   {conditions.uv.data
                     ? `${conditions.uv.data.value} (${conditions.uv.data.grade})`

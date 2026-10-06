@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { baseTime, parseWeather, toGrid } from './weather.ts'
+import { parseUv, uvTime, uvArea } from './uv.ts'
 import { createApiHandler } from './api.ts'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
@@ -71,8 +72,8 @@ test('AirKorea flow finds a nearby station and normalizes measurements', async (
     if (url.hostname === 'dapi.kakao.com') return new Response(JSON.stringify({ documents: [{ x: 200000, y: 450000 }] }))
     assert.equal(url.searchParams.get('serviceKey'), 'air/+test')
     if (url.pathname.includes('getNearbyMsrstnList')) return new Response(JSON.stringify({ response: { header: { resultCode: '00' }, body: { items: [{ stationName: '이촌동' }, { stationName: '용산구' }] } } }))
-    const missingDust = url.searchParams.get('stationName') === '이촌동'
-    return new Response(JSON.stringify({ response: { header: { resultCode: '00' }, body: { items: [{ dataTime: '2026-09-18 10:00', khaiGrade: '2', pm10Value: missingDust ? '-' : '31', pm10Grade1h: '2', pm25Value: missingDust ? '-' : '12', pm25Grade1h: '1', o3Value: '0.021', o3Grade: '1' }] } } }))
+    const missingOzone = url.searchParams.get('stationName') === '이촌동'
+    return new Response(JSON.stringify({ response: { header: { resultCode: '00' }, body: { items: [{ dataTime: '2026-09-18 10:00', khaiGrade: '2', pm10Value: '31', pm10Grade1h: '2', pm25Value: '12', pm25Grade1h: '1', o3Value: missingOzone ? '-' : '0.021', o3Grade: '1' }] } } }))
   }) as typeof fetch
   try {
     const result = await call('/api/fitmap/air-quality?lat=37.5&lon=127', { KAKAO_REST_API_KEY: 'kakao-test', AIRKOREA_SERVICE_KEY: 'air%2F%2Btest' })
@@ -104,20 +105,25 @@ test('temporary AirKorea failure uses clearly labelled model dust values', async
   } finally { globalThis.fetch = original }
 })
 
-test('UV flow uses current model data without the rejected KMA request', async () => {
+function uvResponse(value: number, areaNo: string) {
+  return { response: { header: { resultCode: '00' }, body: { items: { item: [{ areaNo, date: uvTime(), h0: String(value) }] } } } }
+}
+
+test('UV requests the KMA living weather API with a nearby administrative area', async () => {
   const original = globalThis.fetch
   globalThis.fetch = (async input => {
     const url = new URL(String(input))
-    assert.equal(url.hostname, 'air-quality-api.open-meteo.com')
-    assert.equal(url.searchParams.get('current'), 'uv_index')
-    return new Response(JSON.stringify({ current: { time: '2026-09-22T11:00', uv_index: 7 } }))
+    assert.equal(url.hostname, 'apis.data.go.kr')
+    assert.match(url.pathname, /LivingWthrIdxServiceV5\/getUVIdxV5$/)
+    assert.equal(url.searchParams.get('serviceKey'), 'test-only')
+    return new Response(JSON.stringify(uvResponse(7, url.searchParams.get('areaNo')!)))
   }) as typeof fetch
   try {
-    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12')
+    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12', { KMA_SERVICE_KEY: 'test-only' })
     assert.equal(result.status, 200)
     assert.equal(result.data.value, 7)
     assert.equal(result.data.grade, '높음')
-    assert.equal(result.data.source, 'Open-Meteo')
+    assert.equal(result.data.source, 'KMA')
   } finally { globalThis.fetch = original }
 })
 
@@ -126,10 +132,10 @@ test('UV retries a temporary connection failure and preserves a valid zero index
   let attempts = 0
   globalThis.fetch = (async () => {
     if (++attempts === 1) throw new TypeError('fetch failed', { cause: { code: 'ECONNRESET' } })
-    return new Response(JSON.stringify({ current: { time: '2026-10-06T00:00', uv_index: 0 } }))
+    return new Response(JSON.stringify(uvResponse(0, uvArea(37.65, 127.12).code)))
   }) as typeof fetch
   try {
-    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12')
+    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12', { KMA_SERVICE_KEY: 'test-only' })
     assert.equal(attempts, 2)
     assert.equal(result.status, 200)
     assert.equal(result.data.value, 0)
@@ -145,7 +151,7 @@ test('UV stops after one retry when the provider keeps timing out', async () => 
     throw new DOMException('Timed out', 'TimeoutError')
   }) as typeof fetch
   try {
-    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12')
+    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12', { KMA_SERVICE_KEY: 'test-only' })
     assert.equal(attempts, 2)
     assert.equal(result.status, 502)
     assert.match(result.data.error, /연결하지 못했습니다/)
@@ -161,7 +167,7 @@ test('UV does not retry provider rate limits', async () => {
     return new Response('', { status: 429 })
   }) as typeof fetch
   try {
-    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12')
+    const result = await call('/api/fitmap/uv?lat=37.65&lon=127.12', { KMA_SERVICE_KEY: 'test-only' })
     assert.equal(attempts, 1)
     assert.equal(result.status, 502)
     assert.match(result.data.error, /요청 한도/)
@@ -185,4 +191,13 @@ test('Kakao requests attach server key, encode query and normalize results', asy
     assert.equal(result.data[0].latitude, 37.5)
     assert.equal(JSON.stringify(result.data).includes('test-only'), false)
   } finally { globalThis.fetch = original }
+})
+
+test('KMA UV selects the current three-hour slot and never converts missing data into zero', () => {
+  const now = new Date('2026-10-06T04:00:00Z')
+  assert.deepEqual(parseUv({ date: '2026100609', h0: '7', h3: '0' }, now), { value: 0, forecastAt: '2026-10-06T12:00' })
+  assert.throws(() => parseUv({ date: '2026100609', h3: '' }, now))
+  assert.throws(() => parseUv({ date: '2026100609', h3: '-999' }, now))
+  assert.equal(uvTime(new Date('2026-10-05T16:00:00Z')), '2026100600')
+  assert.throws(() => uvArea(0, 0))
 })

@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { baseTime, parseWeather, toGrid, type WeatherItem } from './weather.ts'
 import { createAwsLoader } from './aws.ts'
+import { uvArea, uvTime, parseUv } from './uv.ts'
 
 type Config = { KAKAO_REST_API_KEY?: string; KMA_SERVICE_KEY?: string; KMA_API_HUB_KEY?: string; AIRKOREA_SERVICE_KEY?: string }
 type Next = () => void
@@ -86,13 +87,20 @@ function uvGrade(value: number) {
   return '낮음'
 }
 
-async function uvIndex(lat: number, lon: number) {
-  const url = new URL('https://air-quality-api.open-meteo.com/v1/air-quality')
-  url.search = new URLSearchParams({ latitude: String(lat), longitude: String(lon), current: 'uv_index', timezone: 'Asia/Seoul' }).toString()
-  const data = await upstream<{ current?: { time?: string; uv_index?: number | null } }>(url)
-  const value = data.current?.uv_index
-  if (value == null || !Number.isFinite(value)) throw new ApiError(502, '현재 자외선지수를 제공하지 않습니다.')
-  return { value, grade: uvGrade(value), area: null, forecastAt: data.current?.time ?? null, source: 'Open-Meteo' }
+async function uvIndex(config: Config, lat: number, lon: number) {
+  if (!config.KMA_SERVICE_KEY) throw new ApiError(503, '기상청 API 인증키가 아직 설정되지 않았습니다.')
+  let area: ReturnType<typeof uvArea>
+  try { area = uvArea(lat, lon) } catch (error) { throw new ApiError(400, (error as Error).message) }
+  const url = new URL('https://apis.data.go.kr/1360000/LivingWthrIdxServiceV5/getUVIdxV5')
+  url.search = new URLSearchParams({ serviceKey: decodedServiceKey(config.KMA_SERVICE_KEY), areaNo: area.code, time: uvTime(), dataType: 'JSON', pageNo: '1', numOfRows: '1' }).toString()
+  const data = await upstream<{ response?: { header?: { resultCode?: string }; body?: { items?: { item?: Record<string, string>[] } } } }>(url)
+  if (data.response?.header?.resultCode !== '00') throw new ApiError(502, '기상청 자외선 자료를 조회하지 못했습니다. 생활기상지수 조회서비스(4.0) 활용 승인을 확인하세요.')
+  const item = data.response.body?.items?.item?.[0]
+  if (!item || item.areaNo !== area.code) throw new ApiError(502, '기상청에서 해당 지역의 자외선 자료를 제공하지 않습니다.')
+  try {
+    const parsed = parseUv(item)
+    return { ...parsed, grade: uvGrade(parsed.value), area: area.name, source: 'KMA' }
+  } catch (error) { throw new ApiError(502, (error as Error).message) }
 }
 
 async function airQuality(config: Config, lat: number, lon: number) {
@@ -124,7 +132,8 @@ async function airQuality(config: Config, lat: number, lon: number) {
   }))
   const available = measurements.flatMap(result => result.status === 'fulfilled' ? [result.value] : [])
   if (!available.length) throw new ApiError(502, 'AirKorea에서 최신 측정 자료를 제공하지 않습니다.')
-  const selected = available.find(({ item }) => airValue(item.pm10Value) != null && airValue(item.pm25Value) != null)
+  const selected = available.find(({ item }) => airValue(item.pm10Value) != null && airValue(item.pm25Value) != null && airValue(item.o3Value) != null)
+    ?? available.find(({ item }) => airValue(item.pm10Value) != null && airValue(item.pm25Value) != null)
     ?? available.find(({ item }) => airValue(item.pm10Value) != null || airValue(item.pm25Value) != null)
     ?? available[0]
   const { stationName, item } = selected
@@ -160,7 +169,7 @@ async function modelAirQuality(lat: number, lon: number) {
     .sort((a, b) => severity[b] - severity[a])[0] ?? '정보 없음'
   return {
     source: 'Open-Meteo',
-    warning: 'AirKorea 연결이 지연되어 모델 추정치를 표시합니다. 측정소 관측값과 다를 수 있습니다.',
+    warning: 'AirKorea 조회가 실패하여 모델 추정치를 표시합니다. 측정소 관측값과 다를 수 있으며 오존 자료는 제공하지 않습니다.',
     stationName: '현재 위치 인근',
     measuredAt: data.current?.time ?? null,
     overallGrade,
@@ -208,11 +217,11 @@ export function createApiHandler(config: Config) {
         if (cached && cached.expiresAt > Date.now()) result = cached.value
         else {
           const value = await resilientAirQuality(config, lat, lon)
-          airCache.set(cacheKey, { value, expiresAt: Date.now() + 5 * 60_000 })
+          airCache.set(cacheKey, { value, expiresAt: Date.now() + (value.source === 'AirKorea' ? 5 : 1) * 60_000 })
           result = value
         }
       } else if (route === 'uv') {
-        result = await uvIndex(lat, lon)
+        result = await uvIndex(config, lat, lon)
       } else {
         if (!config.KAKAO_REST_API_KEY) throw new ApiError(503, '카카오 REST API 키가 아직 설정되지 않았습니다.')
         const url = new URL(route === 'region' ? 'https://dapi.kakao.com/v2/local/geo/coord2regioncode.json' : 'https://dapi.kakao.com/v2/local/search/keyword.json')

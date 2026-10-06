@@ -3,6 +3,8 @@
 **/dist
 **/target
 **/data
+!frontend/server/data
+!frontend/server/data/kma-uv-areas.json
 **/.env
 **/.env.*
 **/*.log
