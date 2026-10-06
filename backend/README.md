@@ -1,4 +1,4 @@
-# FitMap Spring Boot 인증 서버
+# FitMap Spring Boot 백엔드
 
 Java 21과 Maven이 필요합니다. `mvn spring-boot:run`으로 실행하거나 프로젝트 루트에서 `docker compose up --build`를 사용하세요. 기본 포트는 8080입니다. 웹 화면은 `http://localhost:5173`에서 열립니다. 백엔드 기본 주소(`http://localhost:8080/`)로 접속하면 웹 화면으로 이동합니다.
 
@@ -18,7 +18,9 @@ H2 데이터베이스는 기본적으로 `backend/data/fitmap.mv.db`에 저장�
 | PUT | `/api/auth/favorites/{placeId}` | 장소를 즐겨찾기에 저장 |
 | DELETE | `/api/auth/favorites/{placeId}` | 즐겨찾기 해제 |
 
-회원가입 JSON에는 `name`, `nickname`, `email`, `password`, `agreeTerms: true`, `agreePrivacy: true`가 필요합니다. 응답 형식은 기존 프런트엔드와 같습니다. 비밀번호는 BCrypt 해시로 저장하며, 로그인 세션은 30일 유효한 HttpOnly 쿠키입니다. 서버에는 세션 토큰의 SHA-256 해시만 저장합니다.
+회원가입 JSON에는 `name`, `nickname`, `email`, `password`, `agreeTerms: true`, `agreePrivacy: true`가 필요합니다. 비밀번호는 BCrypt 해시로 저장합니다. 로그인 시 `fitmap_session` HttpOnly 쿠키를 발급하고 서버에는 세션 토큰의 SHA-256 해시만 저장합니다. 로그인 유지 시 세션은 30일 동안 유효합니다. `keepLoggedIn: false`이면 서버 세션은 1일 동안 유효하며 쿠키에는 별도 만료 기간을 설정하지 않습니다.
+
+카카오 로그인과 비밀번호 재설정 API는 아직 제공하지 않으며 로그인 화면에서도 비활성 상태로 표시합니다. 날씨·주변 장소 등의 `/api/fitmap/*` 요청은 별도 Node.js API 서버가 담당합니다.
 
 환경 변수: `PORT`, `JDBC_URL`, `DB_USER`, `DB_PASSWORD`, `COOKIE_SECURE`, `FRONTEND_URL`. HTTPS 운영 환경에서는 `COOKIE_SECURE=true`를 설정하세요. 테스트는 `mvn test`로 실행합니다.
 
