@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#F7F5FC"/>
+  <circle cx="1100" cy="82" r="265" fill="#EFEBFA"/>
+  <circle cx="1050" cy="540" r="245" fill="#E7E0F7"/>
+  <g transform="translate(80 70)">
+    <rect width="68" height="68" rx="21" fill="#7057DF"/>
+    <path d="M11 34h10l6-19 12 38 6-19h12" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="86" y="50" fill="#242936" font-family="Malgun Gothic, sans-serif" font-size="49" font-weight="700">FitMap<tspan fill="#7057DF">.</tspan></text>
+  </g>
+  <text x="80" y="280" fill="#242936" font-family="Malgun Gothic, sans-serif" font-size="56" font-weight="700" letter-spacing="-2">내 위치에서 시작하는</text>
+  <text x="80" y="359" fill="#7057DF" font-family="Malgun Gothic, sans-serif" font-size="56" font-weight="700" letter-spacing="-2">스마트 운동 가이드</text>
+  <text x="83" y="430" fill="#777B86" font-family="Malgun Gothic, sans-serif" font-size="25">날씨와 주변 운동 장소를 한눈에 확인하세요.</text>
+  <text x="83" y="550" fill="#7057DF" font-family="Malgun Gothic, sans-serif" font-size="24" font-weight="700">fitmap.store</text>
+  <g transform="translate(880 226)">
+    <path d="M110 0C49 0 0 47 0 106c0 86 110 173 110 173s110-87 110-173C220 47 171 0 110 0Z" fill="#7057DF"/>
+    <path d="M45 108h30l17-50 32 101 17-51h34" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
